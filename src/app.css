@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+button {
+  @apply p-2;
+}
+
+input {
+  @apply ring-2 rounded-sm ring-black/50 p-1;
+}
