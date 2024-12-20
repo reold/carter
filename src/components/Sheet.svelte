@@ -10,11 +10,10 @@
   });
 
   const yOffset = tweened(0);
-  const opacity = tweened(1);
 
-  yOffset.subscribe((offset) => {
-    opacity.set(((10000 + offset) / 10000) * 1, { duration: 10 });
-  });
+  // yOffset.subscribe((offset) => {
+  // opacity.set(((10000 + offset) / 10000) * 1, { duration: 10 });
+  // });
 
   const handleTouchStart = (e: TouchEvent) => {
     touch.held = true;
@@ -36,46 +35,44 @@
 
     if (-$yOffset > document.body.clientHeight / 3) {
       visible = false;
+      yOffset.set(0, { duration: 0 });
+    } else {
+      await yOffset.set(0, { duration: 50 });
     }
-    yOffset.set(0, { duration: 0 });
   };
 </script>
 
 {#if visible}
-  <div
-    class="w-screen h-screen absolute top-0 overflow-y-clip"
-    style="opacity: {$opacity};"
-  >
+  <div class="w-screen h-[100dvh] absolute top-0 overflow-y-clip">
     <div
-      class="w-full h-full backdrop-brightness-50 relative top-0"
+      class="w-full h-full backdrop-brightness-[40%] relative top-0"
       in:fade={{ duration: 300 }}
       out:fade={{ duration: 500 }}
     ></div>
     <div
-      class="bg-zinc-900 w-full h-[95vh] absolute rounded-t-[1em] overflow-clip"
+      ontouchstart={handleTouchStart}
+      ontouchmove={handleMove}
+      ontouchend={handleTouchEnd}
+      class="bg-zinc-900/85 backdrop-blur-lg w-full h-[95dvh] absolute rounded-t-[1em] overflow-clip"
       style="bottom: {$yOffset}px"
       in:slide={{ duration: 250 }}
       out:slide={{ duration: 100 }}
     >
       <div
-        class="mt-[1vh] w-full h-[5px] flex flex-col items-center justify-center"
+        class="mt-[1dvh] w-full h-[5px] flex flex-col items-center justify-center"
       >
-        <div class="bg-zinc-500 w-[15%] h-full rounded-full"></div>
+        <div class="bg-zinc-500 w-[5ch] h-full rounded-full"></div>
       </div>
       <div
-        class="w-full flex flex-row justify-center h-[10%] relative"
-        ontouchstart={handleTouchStart}
-        ontouchmove={handleMove}
-        ontouchend={handleTouchEnd}
+        class="w-full flex flex-row justify-center h-[7.5%] mt-[5%] relative border-b-[1px] border-zinc-500/25 text-2xl font-black"
       >
         <!-- <button class="">close</button> -->
 
-        <h1 class="w-full text-center place-content-center text-2xl font-black">
-          {@render title()}
-        </h1>
+        {@render title()}
+
         <button
           onclick={() => (visible = false)}
-          class="-top-[calc(1vh+5px)] absolute right-[1ch]"
+          class="-top-[calc(1dvh+5px)] absolute right-[1ch]"
           aria-label="close sheet"
           ><svg
             xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +87,7 @@
           </svg>
         </button>
       </div>
-      <div class="p-2 h-[50%] flex flex-col items-center justify-around">
+      <div class="p-2 pt-4 h-[80%] flex flex-col items-center justify-start">
         {@render body()}
       </div>
     </div>
