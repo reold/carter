@@ -11,11 +11,27 @@
 
   const yOffset = tweened(0);
 
-  // yOffset.subscribe((offset) => {
-  // opacity.set(((10000 + offset) / 10000) * 1, { duration: 10 });
-  // });
+  function isInsideScrollableDiv(target: HTMLElement) {
+    let currentElement = target;
+
+    while (currentElement.id !== "collapse-sheet") {
+      const overflowY = window.getComputedStyle(currentElement).overflowY;
+      const isScrollable =
+        (overflowY === "auto" || overflowY === "scroll") &&
+        currentElement.scrollHeight > currentElement.clientHeight;
+
+      if (isScrollable && currentElement.scrollTop > 0) {
+        return true;
+      }
+
+      currentElement = currentElement.parentElement as HTMLElement;
+    }
+
+    return false;
+  }
 
   const handleTouchStart = (e: TouchEvent) => {
+    if (isInsideScrollableDiv(e.target)) return;
     touch.held = true;
     touch.originY = e.touches[0].clientY;
   };
@@ -43,7 +59,10 @@
 </script>
 
 {#if visible}
-  <div class="w-screen h-[100dvh] absolute top-0 overflow-y-clip">
+  <div
+    class="w-screen h-[100dvh] absolute top-0 overflow-y-clip"
+    id="collapse-sheet"
+  >
     <div
       class="w-full h-full backdrop-brightness-[40%] relative top-0"
       in:fade={{ duration: 300 }}
@@ -54,9 +73,9 @@
       ontouchmove={handleMove}
       ontouchend={handleTouchEnd}
       class="bg-zinc-900/85 backdrop-blur-lg w-full h-[95dvh] absolute rounded-t-[1em] overflow-clip"
-      style="bottom: {$yOffset}px"
+      style="bottom: 0px; transform: translateY({-$yOffset}px);"
       in:slide={{ duration: 250 }}
-      out:slide={{ duration: 100 }}
+      out:slide={{ duration: 250 }}
     >
       <div
         class="mt-[1dvh] w-full h-[5px] flex flex-col items-center justify-center"
@@ -87,7 +106,7 @@
           </svg>
         </button>
       </div>
-      <div class="p-2 pt-4 h-[80%] flex flex-col items-center justify-start">
+      <div class="px-2 pt-4 h-[87.5%] flex flex-col items-center justify-start">
         {@render body()}
       </div>
     </div>
