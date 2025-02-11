@@ -5,11 +5,13 @@
 
   let { visible = $bindable(false), info = { create: true } } = $props();
   let username = $state("");
-  let clientId = $derived.by(async () => {
+  let clientID = $state("");
+  let computedClientID = $derived.by(async () => {
     return await sha256(`${username}-${navigator.userAgent}`);
   });
   let sessionName = $state("");
   let formWarning = $state("");
+  let msgsDiv: HTMLDivElement | undefined = $state(undefined);
 
   onMount(() => {
     if (!info.create) {
@@ -27,17 +29,61 @@
 
   let room = $state({
     connected: false,
+    activity: "",
     id: "",
     name: "",
-    messages: [] as { username: string; content: string }[],
+    messages: [] as { username: string; content: string; time?: string }[],
   });
 
-  //   room = {
-  //     connected: true,
-  //     id: "1234",
-  //     name: "Wassup",
-  //     messages: [],
-  //   };
+  $effect(() => {
+    room.messages;
+    if (msgsDiv)
+      msgsDiv.scrollTo({
+        top: msgsDiv.scrollHeight || 0,
+        behavior: "smooth",
+      });
+  });
+
+  // username = "aadhi";
+  // room = {
+  //   connected: true,
+  //   id: "1234",
+  //   name: "Wassup",
+  //   messages: [
+  //     { username: "aarjav", content: "Good morning!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "aadhi", content: "Morning to you too!" },
+  //     { username: "carter", content: "Morning to you too!" },
+  //     { username: "server", content: "" },
+  //     {
+  //       username: "aadhi is the main player in every single game",
+  //       content: "Morning to you too!",
+  //     },
+  //     {
+  //       username: "aadhi",
+  //       content:
+  //         "Morning to you too! Im doing dasdfjlsdkjfasdfkl dsdfsdfkjalsdfl kasdjf ksadjf askdjfaksldjf aslkdfj asdklfj asdklfj askdf jaskd jksdfj asldkf",
+  //     },
+  //   ],
+  // };
 
   let messageContent = $state("");
 
@@ -51,6 +97,50 @@
     return hashHex;
   }
 
+  const startListening = () => {
+    roomServices.listenRoom(
+      clientID,
+      (e) => {
+        const data = JSON.parse(e.data);
+
+        switch (data["type"]) {
+          case "msg":
+            room.messages = [
+              ...room.messages,
+              {
+                username: data["username"],
+                content: data["content"],
+                time: data["time"],
+              },
+            ];
+            room.activity = `(${data["activity"].filter((user: { active: boolean }) => user.active == true).length}/${data["activity"].length})`;
+            break;
+          case "conn":
+            room.messages = [
+              ...room.messages,
+              {
+                username: "server",
+                content: data["info"],
+                time: String(Date.now() / 1000),
+              },
+            ];
+            break;
+        }
+      },
+      (e) => {
+        room.messages = [
+          ...room.messages,
+          {
+            username: "server",
+            content: "connection lost, retrying (browser-initiated)",
+            time: String(Date.now() / 1000),
+          },
+        ];
+        console.error(e);
+      }
+    );
+  };
+
   const handleCreate = async () => {
     username = username.trim();
     if (username.length < 4) {
@@ -61,44 +151,28 @@
       sessionName = `${username}'s Music Session`;
     }
 
-    const id = await clientId;
+    clientID = await computedClientID;
     roomServices
-      .createRoom(id, username, sessionName)
+      .createRoom(clientID, username, sessionName)
       .then((data) => {
         if (data["success"]) {
           room.id = data["room_id"];
           room.name = sessionName;
           room.connected = true;
-          roomServices.listenRoom(
-            id,
-            (e) => {
-              const data = JSON.parse(e.data);
-
-              switch (data["type"]) {
-                case "msg":
-                  room.messages = [
-                    ...room.messages,
-                    { username: data["username"], content: data["content"] },
-                  ];
-                  break;
-                case "conn":
-                  room.messages = [
-                    ...room.messages,
-                    { username: "server", content: data["info"] },
-                  ];
-                  break;
-                  ``;
-              }
-            },
-            (e) => {
-              console.error(e);
-            }
-          );
+          startListening();
         } else {
           formWarning = `error: ${data["fault"]}`;
         }
       })
       .catch((e) => {
+        room.messages = [
+          ...room.messages,
+          {
+            username: "server",
+            content: "unable to create room",
+            time: String(Date.now() / 1000),
+          },
+        ];
         console.error(e);
       });
   };
@@ -110,43 +184,28 @@
       return;
     }
 
-    const id = await clientId;
+    clientID = await computedClientID;
     roomServices
-      .joinRoom(id, room.id, username)
+      .joinRoom(clientID, room.id, username)
       .then((data) => {
         if (data["success"]) {
           room.name = data["room_name"];
           room.connected = true;
-          roomServices.listenRoom(
-            id,
-            (e) => {
-              const data = JSON.parse(e.data);
-
-              switch (data["type"]) {
-                case "msg":
-                  room.messages = [
-                    ...room.messages,
-                    { username: data["username"], content: data["content"] },
-                  ];
-                  break;
-                case "conn":
-                  room.messages = [
-                    ...room.messages,
-                    { username: "server", content: data["info"] },
-                  ];
-                  break;
-                  ``;
-              }
-            },
-            (e) => {
-              console.error(e);
-            }
-          );
+          startListening();
         } else {
           formWarning = `error: ${data["fault"]}`;
         }
       })
       .catch((e) => {
+        room.messages = [
+          ...room.messages,
+          {
+            username: "server",
+            content: "unable to join room",
+
+            time: String(Date.now() / 1000),
+          },
+        ];
         console.error(e);
       });
   };
@@ -157,16 +216,20 @@
     const msg = messageContent;
     messageContent = "";
 
-    await roomServices.broadcastRoom(await clientId, room.id, msg);
+    await roomServices.broadcastRoom(await computedClientID, room.id, msg);
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(
-      `https://reold.github.io/carter#join${room.id}`
+      `${window.location.host + window.location.pathname}#join${room.id}`
     );
     room.messages = [
       ...room.messages,
-      { username: "carter", content: "invite link copied to clipboard" },
+      {
+        username: "carter",
+        content: "invite link copied to clipboard",
+        time: String(Date.now() / 1000),
+      },
     ];
   };
 </script>
@@ -224,14 +287,14 @@
           id="room title"
           bind:value={sessionName}
           disabled={!info.create}
-          placeholder="Session Name, eg: Diya's Party Music"
+          placeholder="Session Name, e.g., Varun's Party Music"
           class="bg-white/5 ring-0 focus:outline-none rounded-md py-1 px-2 text-white"
         />
         <p
           class="text-zinc-500 flex flex-row items-center space-x-2 h-[2ch] overflow-hidden"
         >
           <span class="text-xs">client-id: </span>
-          {#await clientId}
+          {#await computedClientID}
             computing
           {:then userAgentSHA}
             <span
@@ -267,44 +330,57 @@
       </div>
     {:else}
       <div
-        class="flex flex-row items-center justify-center bg-white/5 w-full rounded-md overflow-hidden"
+        class="w-[95dvw] h-[80dvh] max-h-[80dvh] overflow-y-scroll overflow-x-hidden text-white ring-1 ring-white/5 my-2 rounded-t-md"
+        bind:this={msgsDiv}
       >
-        <h1 class="text-xl text-white font-semibold w-[80%] text-center">
-          {room.name}
-        </h1>
-
-        <button
-          aria-label="copy session invite link"
-          class="w-[20%] flex flex-col items-center justify-center bg-white/5 py-0 m-0 h-[2em] select-none"
-          onclick={() => handleShare()}
+        <div
+          class="sticky top-0 flex flex-row border-b-[0px] bg-gradient-to-b from-zinc-900 to-zinc-900/50 border-zinc-500/25 w-[95dvw] h-[5dvh]"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            class="text-violet-500 aspect-square py-[5px] inline-block rounded-md"
+          <h1
+            class="text-xl text-white font-semibold w-[80%] text-center place-content-center"
           >
-            <path
-              fill-rule="evenodd"
-              d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z"
-              clip-rule="evenodd"
-            />
-          </svg></button
-        >
-      </div>
-      <div
-        class="w-[95dvw] h-[80dvh] max-h-[80dvh] overflow-y-scroll overflow-x-hidden text-white ring-1 ring-white/5 my-2 rounded-t-md space-y-[2px]"
-      >
-        {#each room.messages as msg}
-          <div class="bg-white/5 flex flex-row items-center">
+            {room.activity}
+            {room.name}
+          </h1>
+
+          <button
+            aria-label="copy session invite link"
+            class="w-[20%] flex flex-col items-center justify-center rounded-md overflow-hidden p-0 m-0 max-h-[3em] select-none"
+            onclick={() => handleShare()}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="text-violet-500 aspect-square p-[0.1em] h-[2em] inline-block"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z"
+                clip-rule="evenodd"
+              />
+            </svg></button
+          >
+        </div>
+        {#each room.messages as msg, mi}
+          <div
+            class="{msg.username == username
+              ? 'ml-auto rounded-br-none mr-1'
+              : 'rounded-bl-none ml-1'} {mi - 1 !== -1 &&
+            room.messages[mi - 1]['username'] === msg['username']
+              ? 'mt-[0.25em]'
+              : 'mt-[0.5em]'} rounded-lg p-1 bg-white/5 flex flex-col items-start justify-center w-fit min-w-[20dvw] max-w-[80dvw]"
+          >
             <p
-              class="bg-white/10 text-white text-lg font-semibold px-0.5 min-w-[10ch] rounded-r-md inline-block truncate"
+              class="{['server', 'carter'].includes(msg.username)
+                ? 'text-red-400'
+                : 'text-purple-400'} text-lg font-medium px-0.5 rounded-r-md inline-block max-w-[95%] truncate"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                class="h-[0.8em] inline"
+                class="h-[0.8em] inline -mr-1"
               >
                 <path
                   fill-rule="evenodd"
@@ -314,7 +390,19 @@
               </svg>
               {msg.username}
             </p>
-            <p class="inline-block pl-2 max-w-[]">{msg.content}</p>
+            <p class="px-2 text-white -mt-[0.2em] text-base">{msg.content}</p>
+            {#if msg.time}
+              <p class="text-xs ml-auto">
+                {new Date(Number(msg.time) * 1000).toLocaleTimeString(
+                  undefined,
+                  {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  }
+                )}
+              </p>
+            {/if}
           </div>
         {/each}
       </div>
