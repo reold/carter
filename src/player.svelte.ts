@@ -16,7 +16,7 @@ const PlayerInfo = $state({
   queue: [] as { url: string; meta: MetaT }[],
   qi: 0,
   playing: false,
-  fetch: 50,
+  fetch: 0,
   t: 0,
   audioElm: new Audio(),
   meta: {
