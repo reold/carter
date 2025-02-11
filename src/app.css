@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  view-transition-name: none;
+}
+
 button {
   @apply p-2;
 }
