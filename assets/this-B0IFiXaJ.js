@@ -1,1 +1,0 @@
-import{ah as t,O as k,ad as O,a7 as S,ai as T}from"./index-BxgfksP3.js";function h(r,i){return r===i||(r==null?void 0:r[T])===i}function x(r={},i,a,c){return t(()=>{var f,s;return k(()=>{f=s,s=[],O(()=>{r!==a(...s)&&(i(r,...s),f&&h(a(...f),r)&&i(null,...f))})}),()=>{S(()=>{s&&h(a(...s),r)&&i(null,...s)})}}),r}export{x as b};
