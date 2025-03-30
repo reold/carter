@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { tweened } from "svelte/motion";
+  import { Spring } from "svelte/motion";
   import { fade, slide } from "svelte/transition";
 
   let { visible = $bindable(false), title, body } = $props();
@@ -9,24 +9,26 @@
     originY: 0,
   });
 
-  const yOffset = tweened(0);
+  // Create a new Spring instance with initial value 0.
+  // Adjust stiffness and damping as desired.
+  const yOffset = new Spring(0, { stiffness: 0.15, damping: 0.8 });
+  let dragDismiss = false;
+
+  // Adjust slide transition duration based on dragDismiss flag.
+  let slideDuration = $derived(dragDismiss ? 0 : 250);
 
   function isInsideScrollableDiv(target: HTMLElement) {
     let currentElement = target;
-
     while (currentElement.id !== "collapse-sheet") {
       const overflowY = window.getComputedStyle(currentElement).overflowY;
       const isScrollable =
         (overflowY === "auto" || overflowY === "scroll") &&
         currentElement.scrollHeight > currentElement.clientHeight;
-
       if (isScrollable && currentElement.scrollTop > 0) {
         return true;
       }
-
       currentElement = currentElement.parentElement as HTMLElement;
     }
-
     return false;
   }
 
@@ -38,29 +40,37 @@
 
   const handleMove = (e: TouchEvent) => {
     if (!touch.held) return;
-
     const dY = touch.originY - e.touches[0].clientY;
-
     if (dY < 0) {
-      yOffset.set(dY, { duration: 0 });
+      // Update the spring’s target based on drag distance.
+      yOffset.target = dY;
     }
   };
 
-  const handleTouchEnd = async (e: TouchEvent) => {
+  const handleTouchEnd = () => {
     touch.held = false;
-
-    if (-$yOffset > document.body.clientHeight / 3) {
-      visible = false;
-      yOffset.set(0, { duration: 0 });
+    // If the dragged distance exceeds one-third of the viewport height...
+    if (-yOffset.current > document.body.clientHeight / 3) {
+      dragDismiss = true;
+      // Animate the sheet off-screen by setting the target to -document.body.clientHeight.
+      yOffset.target = -document.body.clientHeight;
+      // Wait a bit (e.g. 300ms) for the spring animation to complete before hiding the sheet.
+      setTimeout(() => {
+        visible = false;
+        // Reset the spring for next time and clear the dismiss flag.
+        yOffset.target = 0;
+        dragDismiss = false;
+      }, 300);
     } else {
-      await yOffset.set(0, { duration: 50 });
+      // Otherwise, spring the sheet back into position.
+      yOffset.target = 0;
     }
   };
 </script>
 
 {#if visible}
   <div
-    class="w-screen h-[100dvh] absolute top-0 overflow-y-clip"
+    class="w-screen h-[100vh] absolute top-0 overflow-y-hidden"
     id="collapse-sheet"
   >
     <div
@@ -72,28 +82,26 @@
       ontouchstart={handleTouchStart}
       ontouchmove={handleMove}
       ontouchend={handleTouchEnd}
-      class="bg-zinc-900/85 backdrop-blur-lg w-full h-[95dvh] absolute rounded-t-[1em] overflow-clip"
-      style="bottom: 0px; transform: translateY({-$yOffset}px);"
-      in:slide={{ duration: 250 }}
-      out:slide={{ duration: 250 }}
+      class="bg-zinc-900/85 backdrop-blur-md w-full h-[95vh] absolute rounded-t-[1em] overflow-clip"
+      style="bottom: 0px; transform: translate3d(0, {-yOffset.current}px, 0); will-change: transform;"
+      in:slide={{ duration: slideDuration }}
+      out:slide={{ duration: slideDuration }}
     >
       <div
-        class="mt-[1dvh] w-full h-[5px] flex flex-col items-center justify-center"
+        class="mt-[1vh] w-full h-[5px] flex flex-col items-center justify-center"
       >
         <div class="bg-zinc-500 w-[5ch] h-full rounded-full"></div>
       </div>
       <div
         class="w-full flex flex-row justify-center h-[7.5%] mt-[5%] relative border-b-[1px] border-zinc-500/25 text-2xl font-black"
       >
-        <!-- <button class="">close</button> -->
-
         {@render title()}
-
         <button
           onclick={() => (visible = false)}
-          class="-top-[calc(1dvh+5px)] absolute right-[1ch]"
+          class="-top-[calc(1vh+5px)] absolute right-[1ch]"
           aria-label="close sheet"
-          ><svg
+        >
+          <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             class="size-6 fill-white"
