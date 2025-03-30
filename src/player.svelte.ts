@@ -5,6 +5,7 @@ interface MetaT {
   title: string;
   img: string;
   artist: string;
+  album: string;
   lyrics?: {
     type: "plain" | "synced";
     content: { time: number; text: string }[];
@@ -13,17 +14,20 @@ interface MetaT {
 }
 
 const PlayerInfo = $state({
+  init: false as Boolean,
   queue: [] as { url: string; meta: MetaT }[],
   qi: 0,
   playing: false,
   fetch: 0,
   t: 0,
+  dur: 0,
   audioElm: new Audio(),
   meta: {
     id: "",
     title: "Nothing playing",
     img: "",
     artist: "",
+    album: "",
     lyrics: {
       type: "plain",
       content: [],
@@ -37,97 +41,300 @@ export const usePlayer = {
     return PlayerInfo;
   },
 
+  meta: {
+    init: () => {
+      if (!("mediaSession" in navigator)) return;
+
+      navigator.mediaSession.setActionHandler("play", () => {
+        usePlayer.playback.resume();
+      });
+      navigator.mediaSession.setActionHandler("pause", () => {
+        usePlayer.playback.pause();
+      });
+      navigator.mediaSession.setActionHandler("seekbackward", () => {
+        PlayerInfo.audioElm.currentTime -= 10;
+      });
+      navigator.mediaSession.setActionHandler("seekforward", () => {
+        PlayerInfo.audioElm.currentTime += 10;
+      });
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        if (PlayerInfo.qi > 0) {
+          PlayerInfo.qi--;
+          usePlayer.playback.play(
+            PlayerInfo.queue[PlayerInfo.qi].meta,
+            PlayerInfo.queue[PlayerInfo.qi].url
+          );
+        }
+      });
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        if (PlayerInfo.qi < PlayerInfo.queue.length - 1) {
+          PlayerInfo.qi++;
+          usePlayer.playback.play(
+            PlayerInfo.queue[PlayerInfo.qi].meta,
+            PlayerInfo.queue[PlayerInfo.qi].url
+          );
+        }
+      });
+      navigator.mediaSession.setActionHandler("stop", () => {
+        PlayerInfo.audioElm.pause();
+        usePlayer.info.playing = false;
+      });
+    },
+    sync: () => {
+      if (!("mediaSession" in navigator)) return;
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: PlayerInfo.meta.title,
+        artist: PlayerInfo.meta.artist,
+        album: PlayerInfo.meta.album,
+        artwork: [
+          {
+            src: PlayerInfo.meta.img,
+            sizes: "150x150",
+            type: "image/png",
+          },
+        ],
+      });
+    },
+  },
+
   playback: {
     play: async (meta: MetaT, url: string) => {
+      if (PlayerInfo.init === false) {
+        PlayerInfo.init = true;
+        usePlayer.meta.init();
+      }
+
       url = url.replace("http://", "https://");
 
-      const resp = await fetch(url);
-      const respBody = resp.body;
-      const respChunks = [];
-      const respLength = parseInt(resp.headers.get("Content-Length") || "0");
-      let fetchedLength = 0;
+      PlayerInfo.meta = { ...PlayerInfo.meta, ...meta };
 
-      if (!respBody) {
-        console.error("fetch response: song body is null");
-        return;
-      }
-
-      for await (const chunk of respBody) {
-        fetchedLength += chunk.byteLength;
-
-        PlayerInfo.fetch = (fetchedLength / respLength) * 100;
-        respChunks.push(chunk);
-      }
-
-      const blob = new Blob(respChunks);
-      const blobUrl = URL.createObjectURL(blob);
-
+      // Reset audio element
+      PlayerInfo.audioElm.load();
       PlayerInfo.audioElm.pause();
-      PlayerInfo.audioElm.src = blobUrl;
+      PlayerInfo.audioElm.src = url;
       PlayerInfo.audioElm.controls = true;
+      PlayerInfo.fetch = 0; // Reset fetch progress
+      PlayerInfo.dur = 0; // Reset duration
+      PlayerInfo.t = 0; // Reset time
 
-      PlayerInfo.audioElm.play();
+      // Add metadata handler
+      PlayerInfo.audioElm.onloadedmetadata = () => {
+        PlayerInfo.dur = PlayerInfo.audioElm.duration;
+        // load lyrics after meta
+        usePlayer.playback.loadLyrics();
+      };
+
+      // Enable progressive playback
+      PlayerInfo.audioElm
+        .play()
+        .catch((err) => console.error("Playback failed:", err));
       PlayerInfo.audioElm.currentTime = 0;
-      PlayerInfo.audioElm.ontimeupdate = (e) => {
+
+      // Progress tracking
+      PlayerInfo.audioElm.ontimeupdate = () => {
         PlayerInfo.t = PlayerInfo.audioElm.currentTime;
       };
-      usePlayer.info.playing = true;
 
-      PlayerInfo.meta = { ...PlayerInfo.meta, ...meta };
-      usePlayer.playback.loadLyrics();
+      PlayerInfo.audioElm.onprogress = () => {
+        const buffered = PlayerInfo.audioElm.buffered;
+        const duration = PlayerInfo.audioElm.duration;
+
+        if (buffered.length > 0 && duration > 0) {
+          // Get latest buffered end point
+          const bufferedEnd = buffered.end(buffered.length - 1);
+          PlayerInfo.fetch = (bufferedEnd / duration) * 100;
+        }
+      };
+
+      usePlayer.info.playing = true;
+      usePlayer.meta.sync();
     },
+
     appendQueue: async (
-      meta: { id: string; title: string; img: string; artist: string },
+      meta: {
+        id: string;
+        title: string;
+        img: string;
+        artist: string;
+        album: string;
+      },
       url: string
     ) => {
       url = url.replace("http://", "https://");
-      PlayerInfo.queue = [
-        ...PlayerInfo.queue,
-        {
-          url,
-          meta,
-        },
-      ];
+      PlayerInfo.queue = [...PlayerInfo.queue, { url, meta }];
     },
+
     loadLyrics: () => {
-      fetch(`https://lrclib.net/api/search?track_name=${PlayerInfo.meta.title}`)
+      // `https://lrclib.net/api/search?track_name=${PlayerInfo.meta.title}&album_name=${PlayerInfo.meta.album}`
+      //&album_name=${PlayerInfo.meta.album}&artist_name=${PlayerInfo.meta.artist}
+      const metaTitle = PlayerInfo.meta.title
+        ? PlayerInfo.meta.title.trim().toLowerCase()
+        : "";
+      const metaAlbum = PlayerInfo.meta.album
+        ? PlayerInfo.meta.album.trim().toLowerCase()
+        : "";
+      const metaArtist = PlayerInfo.meta.artist
+        ? PlayerInfo.meta.artist.trim().toLowerCase()
+        : "";
+
+      fetch(
+        `https://lrclib.net/api/search?track_name=${encodeURIComponent(
+          PlayerInfo.meta.title
+        )}`
+      )
         .then((res) => res.json())
         .then((data) => {
-          const syncedResults = data.filter(
-            (item: { syncedLyrics: string | null }) => {
-              return item["syncedLyrics"];
-            }
-          );
-          if (syncedResults.length > 0) {
-            let result = syncedResults[0];
-            result["syncedLyrics"] = result["syncedLyrics"]
-              .split("\n")
-              .map((line: string) => {
-                const match = /^\[(\d{2}):(\d{2}\.\d{2})\]\s*(.*)$/.exec(line);
-                if (match) {
-                  const minutes = parseInt(match[1]);
-                  const seconds = parseFloat(match[2]);
-                  const timeInSeconds = minutes * 60 + seconds;
-                  const text = match[3];
-                  return { time: timeInSeconds, text };
-                }
-              });
-            PlayerInfo.meta.lyrics = {
-              type: "synced",
-              content: result["syncedLyrics"],
-              id: result["id"],
-            };
-          } else {
-            console.error("no synced lyrics found");
+          if (!Array.isArray(data) || data.length === 0) {
+            console.warn("No lyrics found.");
+            return;
           }
-        });
+
+          // Filter out candidates that don't have synced lyrics.
+          const validCandidates = data.filter(
+            (candidate) =>
+              candidate.syncedLyrics && candidate.syncedLyrics.trim() !== ""
+          );
+          if (validCandidates.length === 0) {
+            console.warn("No candidates with synced lyrics found.");
+            return;
+          }
+
+          // Try to filter for candidates that exactly match title, album, and artist.
+          const exactCandidates = validCandidates.filter((candidate) => {
+            const candidateTitle = (
+              candidate.title ||
+              candidate.name ||
+              candidate.trackName ||
+              ""
+            )
+              .trim()
+              .toLowerCase();
+            const candidateAlbum = (
+              candidate.album ||
+              candidate.albumName ||
+              ""
+            )
+              .trim()
+              .toLowerCase();
+            let candidateArtist = "";
+            if (candidate.artist) {
+              candidateArtist = candidate.artist.trim().toLowerCase();
+            } else if (candidate.artistName) {
+              candidateArtist = candidate.artistName.trim().toLowerCase();
+            } else if (
+              candidate.artistMap &&
+              candidate.artistMap.primary_artists &&
+              candidate.artistMap.primary_artists.length
+            ) {
+              candidateArtist = candidate.artistMap.primary_artists[0].name
+                .trim()
+                .toLowerCase();
+            }
+            return (
+              candidateTitle === metaTitle &&
+              candidateAlbum === metaAlbum &&
+              candidateArtist === metaArtist
+            );
+          });
+
+          let bestCandidate;
+          if (exactCandidates.length > 0) {
+            // From the exact matches, choose the one with the closest duration.
+            bestCandidate = exactCandidates.reduce((best, candidate) =>
+              Math.abs(candidate.duration - PlayerInfo.dur) <
+              Math.abs(best.duration - PlayerInfo.dur)
+                ? candidate
+                : best
+            );
+          } else {
+            // Fallback: use a weighted scoring system among valid candidates.
+            const DURATION_WEIGHT = 1;
+            const ALBUM_PENALTY = 20; // Strong penalty if album doesn't match
+            const ARTIST_PENALTY = 20; // Strong penalty for artist mismatch
+            const TITLE_PENALTY = 20; // Strong penalty for title mismatch
+
+            const scoredCandidates = validCandidates.map((candidate) => {
+              let score =
+                Math.abs(candidate.duration - PlayerInfo.dur) * DURATION_WEIGHT;
+              const candidateTitle = (
+                candidate.title ||
+                candidate.name ||
+                candidate.trackName ||
+                ""
+              )
+                .trim()
+                .toLowerCase();
+              const candidateAlbum = (
+                candidate.album ||
+                candidate.albumName ||
+                ""
+              )
+                .trim()
+                .toLowerCase();
+              let candidateArtist = "";
+              if (candidate.artist) {
+                candidateArtist = candidate.artist.trim().toLowerCase();
+              } else if (candidate.artistName) {
+                candidateArtist = candidate.artistName.trim().toLowerCase();
+              } else if (
+                candidate.artistMap &&
+                candidate.artistMap.primary_artists &&
+                candidate.artistMap.primary_artists.length
+              ) {
+                candidateArtist = candidate.artistMap.primary_artists[0].name
+                  .trim()
+                  .toLowerCase();
+              }
+              if (metaAlbum && candidateAlbum !== metaAlbum) {
+                score += ALBUM_PENALTY;
+              }
+              if (metaArtist && candidateArtist !== metaArtist) {
+                score += ARTIST_PENALTY;
+              }
+              if (metaTitle && candidateTitle !== metaTitle) {
+                score += TITLE_PENALTY;
+              }
+              return { candidate, score };
+            });
+            bestCandidate = scoredCandidates.reduce((best, curr) =>
+              curr.score < best.score ? curr : best
+            ).candidate;
+          }
+
+          // Process the synced lyrics of the best candidate.
+          const lyricsContent = bestCandidate.syncedLyrics
+            .split("\n")
+            .map((line: string) => {
+              const match = /^\[(\d{2}):(\d{2}\.\d{2})\]\s*(.*)$/.exec(line);
+              if (match) {
+                const minutes = parseInt(match[1], 10);
+                const seconds = parseFloat(match[2]);
+                return { time: minutes * 60 + seconds, text: match[3] };
+              }
+              // Fallback: if the line doesn't match the expected timestamp format.
+              return { time: 0, text: line };
+            })
+            .filter((entry) => entry.text && entry.text.trim() !== "");
+
+          PlayerInfo.meta.lyrics = {
+            type: "synced",
+            content: lyricsContent,
+            id: bestCandidate.id,
+          };
+        })
+        .catch((err) => console.error("Lyrics fetch failed:", err));
     },
+
     pause: () => {
       PlayerInfo.audioElm.pause();
       usePlayer.info.playing = false;
     },
+
     resume: () => {
-      PlayerInfo.audioElm.play();
+      PlayerInfo.audioElm
+        .play()
+        .catch((err) => console.error("Resume failed:", err));
       usePlayer.info.playing = true;
     },
   },
@@ -136,31 +343,26 @@ export const usePlayer = {
     decryptURL: (encryptedMediaUrl: string) => {
       if (!encryptedMediaUrl) return [];
 
-      const qualities = [
-        { id: "_12", bitrate: "12kbps" },
-        { id: "_48", bitrate: "48kbps" },
-        { id: "_96", bitrate: "96kbps" },
-        { id: "_160", bitrate: "160kbps" },
-        { id: "_320", bitrate: "320kbps" },
-      ];
-
       const key = "38346591";
       const iv = "00000000";
-
       const encrypted = crypto.util.decode64(encryptedMediaUrl);
       const decipher = crypto.cipher.createDecipher(
         "DES-ECB",
         crypto.util.createBuffer(key)
       );
+
       decipher.start({ iv: crypto.util.createBuffer(iv) });
       decipher.update(crypto.util.createBuffer(encrypted));
       decipher.finish();
-      const decryptedLink = decipher.output.getBytes();
 
-      return qualities.map((quality) => ({
-        quality: quality.bitrate,
-        url: decryptedLink.replace("_96", quality.id),
-      }));
+      const decryptedLink = decipher.output.getBytes();
+      return [
+        { quality: "12kbps", url: decryptedLink.replace("_96", "_12") },
+        { quality: "48kbps", url: decryptedLink.replace("_96", "_48") },
+        { quality: "96kbps", url: decryptedLink },
+        { quality: "160kbps", url: decryptedLink.replace("_96", "_160") },
+        { quality: "320kbps", url: decryptedLink.replace("_96", "_320") },
+      ];
     },
   },
 };
