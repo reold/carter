@@ -5,13 +5,7 @@
   import { onMount } from "svelte";
   import { usePlayer } from "../player.svelte";
   import Sheet from "../components/Sheet.svelte";
-
-  const proxy =
-    "https://vercel-cors-anywhere-kl6pfodtk-reolds-projects.vercel.app/api?url=";
-
-  const server = `${proxy}https://www.jiosaavn.com/api.php`;
-
-  const searchAPI = `${server}`;
+  import { masterServices } from "../services.svelte";
 
   let { jamInfo = { create: true }, showJAM = $bindable(false) } = $props();
   let showSong = $state(false);
@@ -29,7 +23,14 @@
         subtitle: string;
         image: string;
         perma_url: string;
-        more_info: { encrypted_media_url: string; music: string };
+        more_info: {
+          encrypted_media_url: string;
+          music: string;
+          album: string;
+          artistMap: {
+            primary_artists: { name: string }[];
+          };
+        };
       }[];
     };
   });
@@ -37,31 +38,22 @@
   onMount(() => {
     const now = Date.now();
     Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("search-cache-")) {
+      if (key.startsWith("cache-search-")) {
         const value = JSON.parse(localStorage.getItem(key));
         if (value.expiry < now) {
           localStorage.removeItem(key);
         }
       }
     });
-
-    // FIXME: remove in prod
-    // usePlayer.playback.play(
-    //   {
-    //     id: "uK77OmjV",
-    //     title: "Oru Pushpam",
-    //     img: "https://c.saavncdn.com/000/default_Saregama-150x150.jpg",
-    //     artist: "KJ Yesudas",
-    //   },
-    //   "https://aac.saavncdn.com/847/8e28f24b3ea963b8224ea7585bdc67fb_320.mp4"
-    // );
-    // showSong = true;
-    // usePlayer.playback.pause();
   });
 
-  async function fetchWithCustomCache(url: string, cacheDuration: number) {
+  async function fetchWithCustomCache(
+    id: string,
+    func: () => any,
+    cacheDuration: number
+  ) {
     const now = Date.now();
-    const key = `search-cache-${url}`;
+    const key = `cache-${id}`;
 
     // Check if a cached response exists and is still valid
     if (localStorage.getItem(key)) {
@@ -76,8 +68,7 @@
     }
 
     // Fetch fresh data
-    const response = await fetch(url);
-    const data = await response.json();
+    const data = await func();
 
     // Store the data in cache with an expiry
     localStorage.setItem(
@@ -90,6 +81,7 @@
 
     return data;
   }
+
   let searchText: string = $state("");
   let showClearText: boolean = $state(false);
   let inputValue = $state("");
@@ -118,13 +110,15 @@
     )
       return;
 
-    const apiURL = `${searchAPI}${encodeURIComponent(
-      `?p=1&q=${query}&_format=json&_marker=0&api_version=4&ctx=web6dot0&n=30&__call=search.getResults`
-    )}`;
-
     searchRes.loading = true;
 
-    fetchWithCustomCache(apiURL, 60 * 60 * 1000).then((data) => {
+    fetchWithCustomCache(
+      `search-${query}`,
+      () => {
+        return masterServices.search.songs(query);
+      },
+      60 * 60 * 1000
+    ).then((data) => {
       data.results = data.results.map((song: { image: string }) => {
         song.image = song.image.replace("http://", "https://");
         return song;
@@ -255,7 +249,8 @@
                 id: song.id,
                 title: song.title,
                 img: song.image.replace("http://", "https://"),
-                artist: song.more_info.music,
+                artist: song.more_info.artistMap.primary_artists[0].name || "",
+                album: song.more_info.album || "",
               },
               highestQURL
             );
@@ -274,7 +269,8 @@
                 id: song.id,
                 title: song.title,
                 img: song.image.replace("http://", "https://"),
-                artist: song.more_info.music,
+                artist: song.more_info.artistMap.primary_artists[0].name || "",
+                album: song.more_info.album || "",
               },
               highestQURL
             );
@@ -300,22 +296,26 @@
   ></div>
   <div
     transition:fly={{ duration: 500, y: 100 }}
-    class="absolute h-[7dvh] w-screen bottom-[5dvh] flex flex-col items-center"
+    class="absolute h-[8dvh] w-screen bottom-[5dvh] flex flex-col items-center"
   >
     <div
-      class="h-full w-[95dvw] bg-white/5 text-white rounded-md backdrop-brightness-[50%] backdrop-blur-lg flex flex-row items-center px-[0.5dvh] border-t-[1px] border-white/5 overflow-hidden"
+      class="h-full w-[95dvw] bg-white/5 text-white rounded-md backdrop-brightness-[50%] backdrop-blur-lg flex flex-row items-center px-[0.5dvh] pt-[0.5dvh] border-t-[1px] border-white/5 overflow-hidden"
     >
-      {#if ![0, 100].includes(usePlayer.info.fetch)}
-        <div
-          class="h-[1px] w-full bg-white/5 absolute top-0"
-          transition:fade={{ duration: 250 }}
-        >
+      <div
+        class="h-[2px] inset-0 w-full bg-white/5 absolute top-0 rounded-full overflow-hidden"
+        transition:fade={{ duration: 250 }}
+      >
+        {#if usePlayer.info.fetch != 0}
           <div
-            class="h-full bg-white/45"
+            class="h-full bg-white/20 absolute"
             style="width: {usePlayer.info.fetch}%;"
           ></div>
-        </div>
-      {/if}
+        {/if}
+        <div
+          class="h-full bg-red-900 absolute z-10"
+          style="width: {(usePlayer.info.t / usePlayer.info.dur) * 100}%;"
+        ></div>
+      </div>
 
       {#if !showSong}
         <img
@@ -438,7 +438,7 @@
                 >Powered by LRCLIB</span
               >
             </h3>
-            <ul class="max-h-full px-2 text-sm space-y-2">
+            <ul class="max-h-full px-2 text-md space-y-2">
               {#each usePlayer.info.meta.lyrics.content as block}
                 <li
                   class={usePlayer.info.t >= block.time
@@ -446,7 +446,7 @@
                     : "text-zinc-500"}
                 >
                   <button
-                    class="m-0 p-0"
+                    class="m-0 p-0 text-left"
                     onclick={() => {
                       usePlayer.info.audioElm.currentTime = block.time;
                     }}>{block.text}</button
@@ -456,7 +456,7 @@
                 <li class="text-zinc-500">
                   Currently not available. You can help add/improve lyrics
                   through <a
-                    class="text-blue-400 after:content-['↟']"
+                    class="text-blue-400 after:content-['_↗']"
                     href="https://lrclib.net/"
                     target="_blank">LRCLIB</a
                   >
