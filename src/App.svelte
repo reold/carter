@@ -10,6 +10,9 @@
     geet: {
       component: () => import("./pages/Geet.svelte"),
     },
+    auth: {
+      component: () => import("./pages/Auth.svelte"),
+    },
   };
 
   let route = $state(routing.home);
