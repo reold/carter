@@ -1,6 +1,13 @@
 <script lang="ts">
-  import { fade } from "svelte/transition";
+  import { onMount } from "svelte";
+  import { useStorage } from "./storage.svelte";
+
   import CarterLogo from "./lib/CarterLogo.svelte";
+  import { fade } from "svelte/transition";
+
+  onMount(() => {
+    useStorage.init();
+  });
 
   const routing: { [key: string]: { component: any } } = {
     home: { component: () => import("./pages/Home.svelte") },
