@@ -13,9 +13,14 @@ interface MetaT {
   };
 }
 
+export interface TrackT {
+  url: string;
+  meta: MetaT;
+}
+
 const PlayerInfo = $state({
   init: false as Boolean,
-  queue: [] as { url: string; meta: MetaT }[],
+  queue: [] as TrackT[],
   qi: 0,
   playing: false,
   fetch: 0,
@@ -57,24 +62,16 @@ export const usePlayer = {
       navigator.mediaSession.setActionHandler("seekforward", () => {
         PlayerInfo.audioElm.currentTime += 10;
       });
-      navigator.mediaSession.setActionHandler("previoustrack", () => {
-        if (PlayerInfo.qi > 0) {
-          PlayerInfo.qi--;
-          usePlayer.playback.play(
-            PlayerInfo.queue[PlayerInfo.qi].meta,
-            PlayerInfo.queue[PlayerInfo.qi].url
-          );
-        }
-      });
-      navigator.mediaSession.setActionHandler("nexttrack", () => {
-        if (PlayerInfo.qi < PlayerInfo.queue.length - 1) {
-          PlayerInfo.qi++;
-          usePlayer.playback.play(
-            PlayerInfo.queue[PlayerInfo.qi].meta,
-            PlayerInfo.queue[PlayerInfo.qi].url
-          );
-        }
-      });
+
+      navigator.mediaSession.setActionHandler(
+        "previoustrack",
+        usePlayer.playback.previous
+      );
+      navigator.mediaSession.setActionHandler(
+        "nexttrack",
+        usePlayer.playback.next
+      );
+
       navigator.mediaSession.setActionHandler("stop", () => {
         PlayerInfo.audioElm.pause();
         usePlayer.info.playing = false;
@@ -104,6 +101,9 @@ export const usePlayer = {
         PlayerInfo.init = true;
         usePlayer.meta.init();
       }
+
+      PlayerInfo.queue = [...PlayerInfo.queue, { url, meta }];
+      PlayerInfo.qi = PlayerInfo.queue.length - 1;
 
       url = url.replace("http://", "https://");
 
@@ -145,6 +145,10 @@ export const usePlayer = {
           const bufferedEnd = buffered.end(buffered.length - 1);
           PlayerInfo.fetch = (bufferedEnd / duration) * 100;
         }
+      };
+
+      PlayerInfo.audioElm.onended = () => {
+        usePlayer.playback.next();
       };
 
       usePlayer.info.playing = true;
@@ -336,6 +340,25 @@ export const usePlayer = {
         .play()
         .catch((err) => console.error("Resume failed:", err));
       usePlayer.info.playing = true;
+    },
+
+    next: () => {
+      if (PlayerInfo.qi < PlayerInfo.queue.length - 1) {
+        PlayerInfo.qi++;
+        usePlayer.playback.play(
+          PlayerInfo.queue[PlayerInfo.qi].meta,
+          PlayerInfo.queue[PlayerInfo.qi].url
+        );
+      }
+    },
+    previous: () => {
+      if (PlayerInfo.qi > 0) {
+        PlayerInfo.qi--;
+        usePlayer.playback.play(
+          PlayerInfo.queue[PlayerInfo.qi].meta,
+          PlayerInfo.queue[PlayerInfo.qi].url
+        );
+      }
     },
   },
 
