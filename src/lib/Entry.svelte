@@ -5,37 +5,42 @@
 
 <Sheet bind:visible
   >{#snippet title()}
-    <h1 class="w-full text-center place-content-center text-2xl font-black">
+    <h1
+      class="w-full text-center place-content-center text-2xl font-black text-black dark:text-white"
+    >
       Link your Account
     </h1>
   {/snippet}
   {#snippet body()}
-    <p class="text-base">
+    <p class="text-base text-black dark:text-white">
       Connect your music profiles to get your recommendations and listings.
       Supported platforms include Spotify, JioSaavn.
-      <span class="text-sm text-zinc-500">
+      <span class="text-sm text-black/80 dark:text-white/50">
         <br />This feature is in development and might not work as expected
         right now.
       </span>
     </p>
 
-    <div class="flex flex-col space-y-2 w-[95dvw] text-black mt-[10dvh]">
+    <div
+      class="flex flex-col space-y-2 w-[95dvw] text-white dark:text-black mt-[10dvh]"
+    >
       <input
         type="text"
         placeholder="Spotify Profile URL"
-        class="bg-white/5 ring-0 focus:outline-none rounded-md py-1 px-2 text-white"
+        class="bg-black/10 dark:bg-white/10 ring-0 focus:outline-none rounded-md py-1 px-2 text-black dark:text-white"
       />
       <input
         type="text"
         placeholder="JioSaavn Profile URL"
-        class="bg-white/5 ring-0 focus:outline-none rounded-md py-1 px-2 text-white"
+        class="bg-black/10 dark:bg-white/10 ring-0 focus:outline-none rounded-md py-1 px-2 text-black dark:text-white"
       />
     </div>
-    <button class="bg-blue-400 rounded-md text-black w-[95dvw] mt-[5dvh]"
+    <button
+      class="bg-blue-500 dark:bg-blue-400 rounded-md text-white dark:text-black w-[95dvw] mt-[5dvh]"
       >continue</button
     >
     <button
-      class="bg-white/5 rounded-md text-white w-[95dvw] mt-2"
+      class="bg-black/10 dark:bg-white/10 rounded-md text-black dark:text-white w-[95dvw] mt-2"
       onclick={() => {
         window.location.href = "#dashboard";
       }}>skip as a guest</button

@@ -1,8 +1,14 @@
 <script lang="ts">
-  import { fade, slide, fly } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
   import { cubicInOut } from "svelte/easing";
 
-  const { song, playing = false, onPlay, onAddToQueue } = $props();
+  const {
+    song,
+    playing = false,
+    onPlay,
+    onAddToQueue,
+    onMoreActions,
+  } = $props();
 
   let touch = $state({
     held: false,
@@ -11,13 +17,13 @@
 
   let focused = $state(false);
 
-  let showTools = $state(false);
+  let showActions = $state(false);
 </script>
 
 <div
   transition:fade={{ duration: 500 }}
-  class="w-full h-[10dvh] pl-2 min-h-[7dvh] ring-zinc-500 text-white overflow-hidden flex flex-row space-x-2 border-b-[1px] border-white/5 py-2 select-none transition-colors duration-100 {focused
-    ? 'bg-white/5'
+  class="w-full h-[10dvh] pl-2 min-h-[7dvh] ring-zinc-500 text-black dark:text-white overflow-hidden flex flex-row space-x-2 border-b-[1px] border-black/5 dark:border-white/5 py-2 select-none transition-colors duration-100 {focused
+    ? 'bg-black/5 dark:bg-white/5'
     : 'bg-transparent'}"
   ontouchstart={(e) => {
     touch.held = true;
@@ -28,9 +34,9 @@
     if (touch.held) {
       const dX = e.touches[0].clientX - touch.originX;
       if (dX < -50) {
-        showTools = true;
+        showActions = true;
       } else {
-        showTools = false;
+        showActions = false;
       }
     }
   }}
@@ -51,15 +57,23 @@
   >
     <img src={song.image} alt="cover art" class="max-h-[7dvh]" loading="lazy" />
   </button>
-  <div class="flex flex-col overflow-x-hidden -space-y-1 justify-center w-full">
+  <button
+    class="flex flex-col overflow-x-hidden -space-y-1 justify-center w-full text-left p-0"
+    onclick={() => {
+      if (!playing) {
+        onPlay();
+      }
+    }}
+  >
     <h2
       class="font-medium text-base max-w-full truncate {playing
-        ? 'text-violet-500'
+        ? 'text-violet-600 dark:text-violet-500'
         : ''}"
     >
       {@html song.title}
     </h2>
-    <span class="font-base text-[0.7em] text-white/80 pl-2 truncate max-w-full"
+    <span
+      class="font-base text-[0.7em] text-black/80 dark:text-white/80 pl-2 truncate max-w-full"
       ><svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
@@ -76,14 +90,14 @@
       </svg>
       {@html song.subtitle}</span
     >
-  </div>
-  {#if showTools}
+  </button>
+  {#if showActions}
     <div
-      class="flex items-center text-white min-h-[7dvh] w-[40%] space-x-2"
+      class="flex items-center text-black dark:text-white min-h-[7dvh] w-[40%] space-x-2"
       transition:slide={{ axis: "x", duration: 100, easing: cubicInOut }}
     >
       <button
-        class="bg-white/5 text-white rounded-full"
+        class="bg-black/5 dark:bg-white/5 text-black dark:text-white rounded-full"
         aria-label="add song to queue"
         onclick={onAddToQueue}
         ><svg
@@ -100,11 +114,9 @@
         </svg>
       </button>
       <button
-        class="bg-white/5 text-blue-300 rounded-full"
+        class="bg-black/5 dark:bg-white/5 text-black dark:text-white rounded-full"
         aria-label="visit source link"
-        onclick={() => {
-          window.open(song.perma_url);
-        }}
+        onclick={onMoreActions}
         ><svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -116,8 +128,14 @@
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
-            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+            d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
           />
+
+          <!-- <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+          /> -->
         </svg>
       </button>
     </div>
