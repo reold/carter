@@ -3,6 +3,7 @@
   import CarterLogo from "../lib/CarterLogo.svelte";
 
   import { masterServices } from "../services.svelte";
+  import { config } from "../storage.svelte";
 
   const inputs = $state({
     email: {
@@ -105,6 +106,14 @@
                 sessionToken: data.sessionToken,
               };
               staging.phase = "complete";
+
+              $config.connections.jiosaavn = {
+                data: {
+                  meta: data.data,
+                  token: data.sessionToken,
+                },
+                active: true,
+              };
             } else {
               alert(
                 `The provided otp is incorrect (${staging.infoBuild.email})`
@@ -120,7 +129,9 @@
 </script>
 
 <div
-  class="w-[100dvw] h-[100dvh] bg-violet-400 dark:bg-violet-900 flex flex-col items-center justify-center"
+  class="w-[100dvw] h-[100dvh] bg-black flex flex-col items-center justify-center"
+  style="background-size: 40px 40px;
+  background-image: radial-gradient(circle, #FFF 1px, rgba(0, 0, 0, 0) 1px);"
 >
   <div
     class="w-[90%] max-w-[30rem] bg-white text-black dark:bg-black dark:text-white rounded-md p-2.5 ring-1 ring-black/50 dark:ring-white/50"
@@ -269,5 +280,16 @@
 
       <span>continue</span>
     </button>
+    {#if staging.phase == "email" && staging.loading == false}
+      <button
+        transition:fade={{ duration: 500 }}
+        onclick={handleContinue}
+        type="button"
+        class="w-full text-sm bg-black/25 dark:bg-white/15 dark:text-white text-black rounded-lg mt-2.5"
+        class:animate-pulse={staging.loading}
+      >
+        <span>cancel</span>
+      </button>
+    {/if}
   </div>
 </div>
