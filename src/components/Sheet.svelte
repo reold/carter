@@ -82,7 +82,7 @@
       ontouchstart={handleTouchStart}
       ontouchmove={handleMove}
       ontouchend={handleTouchEnd}
-      class="bg-zinc-900/85 backdrop-blur-md w-full h-[95vh] absolute rounded-t-[1em] overflow-clip"
+      class="bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md w-full h-[95vh] absolute rounded-t-[1em] overflow-clip"
       style="bottom: 0px; transform: translate3d(0, {-yOffset.current}px, 0); will-change: transform;"
       in:slide={{ duration: slideDuration }}
       out:slide={{ duration: slideDuration }}
@@ -90,10 +90,12 @@
       <div
         class="mt-[1vh] w-full h-[5px] flex flex-col items-center justify-center"
       >
-        <div class="bg-zinc-500 w-[5ch] h-full rounded-full"></div>
+        <div
+          class="bg-black/50 dark:bg-white/50 w-[5ch] h-full rounded-full"
+        ></div>
       </div>
       <div
-        class="w-full flex flex-row justify-center h-[7.5%] mt-[5%] relative border-b-[1px] border-zinc-500/25 text-2xl font-black"
+        class="w-full flex flex-row justify-center h-[7.5%] mt-[5%] relative border-b-[1px] border-black/25 dark:border-white/25 text-2xl font-black"
       >
         {@render title()}
         <button
@@ -104,7 +106,7 @@
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
-            class="size-6 fill-white"
+            class="size-6 dark:fill-white fill-black"
           >
             <path
               fill-rule="evenodd"
