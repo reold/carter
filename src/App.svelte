@@ -4,6 +4,7 @@
 
   import CarterLogo from "./lib/CarterLogo.svelte";
   import { fade } from "svelte/transition";
+  import { ViewInfo } from "./store.svelte";
 
   onMount(() => {
     useStorage.init();
@@ -32,8 +33,8 @@
       if (routeParams.startsWith("join")) {
         props = {
           jamInfo: { create: false, roomId: routeParams.substring(4) },
-          showJAM: true,
         };
+        $ViewInfo.sheets.jam = true;
         route = routing.dashboard;
       }
       return;
