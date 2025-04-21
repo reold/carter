@@ -5,7 +5,7 @@ import { writable, get } from "svelte/store";
 import type { TrackT } from "./player.svelte";
 
 // initialize reold-opfs
-useOPFS.setDebug(true);
+import.meta.env.DEV ? useOPFS.setDebug(true) : null;
 useOPFS.setWorker(new opfsWorker());
 
 const CONFIG_VERSION = 0;
@@ -14,7 +14,15 @@ export const opfs = $state({
   root: {} as FileSystemDirectoryHandle,
   app: {} as FileSystemDirectoryHandle,
   config: {} as FileSystemFileHandle,
+  configDebounce: 0,
 });
+
+enum DownloadStatus {
+  NONE,
+  PARTIAL,
+  COMPLETE,
+  ERROR,
+}
 
 export let config = writable({
   version: CONFIG_VERSION,
@@ -49,7 +57,15 @@ export let config = writable({
       };
     };
   };
-  library: { playlists: any[] };
+  library: {
+    playlists: {
+      id: string;
+      title: string;
+      description: string;
+      tracks: TrackT[];
+      download: DownloadStatus;
+    }[];
+  };
 });
 
 export const useStorage = {
@@ -68,7 +84,6 @@ export const useStorage = {
     if (configFile.size > 0) {
       const existingConfig = JSON.parse(await configFile.text());
 
-      console.info(existingConfig);
       if (existingConfig && existingConfig.version < CONFIG_VERSION) {
         console.warn(
           `Configuration version mismatch: Expected ${CONFIG_VERSION}, got ${existingConfig.version}; Proceeding to rewrite`
@@ -88,9 +103,19 @@ export const useStorage = {
       );
     }
 
-    config.subscribe(() => {
-      useOPFS.write("reold-app-ammp/config.json", JSON.stringify(get(config)));
-    });
+    const syncConfig = () => {
+      if (Date.now() - opfs.configDebounce < 10) return;
+
+      opfs.configDebounce = Date.now();
+      setTimeout(async () => {
+        await useOPFS.write(
+          "reold-app-ammp/config.json",
+          JSON.stringify(get(config))
+        );
+      }, 10);
+    };
+
+    config.subscribe(syncConfig);
   },
 };
 
@@ -108,17 +133,20 @@ export const useLibrary = {
   //   delete: async (playlist: any) => {},
   // },
   playlist: {
-    create: (
-      title: string,
-      description: string | null = null,
-      tracks: TrackT[]
-    ) => {
+    getAll: () => {
+      const playlists = get(config).library.playlists;
+
+      return playlists;
+    },
+
+    create: (title: string, description: string = "", tracks: TrackT[]) => {
       const playlists = get(config).library.playlists;
       const newPlaylist = {
         id: crypto.randomUUID(),
         title,
         description,
         tracks,
+        download: DownloadStatus.NONE,
       };
       config.update((prev) => ({
         ...prev,
@@ -140,7 +168,7 @@ export const useLibrary = {
         },
       }));
     },
-    update: (id: string, title: string, description: string | null = null) => {
+    update: (id: string, title: string, description: string = "") => {
       const playlists = get(config).library.playlists;
       config.update((prev) => ({
         ...prev,
@@ -161,6 +189,25 @@ export const useLibrary = {
           playlists: playlists.map((playlist) =>
             playlist.id === id
               ? { ...playlist, tracks: [...playlist.tracks, track] }
+              : playlist
+          ),
+        },
+      }));
+    },
+    remove: (id: string, trackId: string) => {
+      const playlists = get(config).library.playlists;
+      config.update((prev) => ({
+        ...prev,
+        library: {
+          ...prev.library,
+          playlists: playlists.map((playlist) =>
+            playlist.id === id
+              ? {
+                  ...playlist,
+                  tracks: playlist.tracks.filter(
+                    (track) => track.meta.id !== trackId
+                  ),
+                }
               : playlist
           ),
         },
