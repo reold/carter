@@ -23,6 +23,10 @@ const PlayerInfo = $state({
   queue: [] as TrackT[],
   qi: 0,
   playing: false,
+  controls: {
+    loop: false,
+    shuffle: false,
+  },
   fetch: 0,
   t: 0,
   dur: 0,
@@ -96,14 +100,16 @@ export const usePlayer = {
   },
 
   playback: {
-    play: async (meta: MetaT, url: string) => {
+    play: async (meta: MetaT, url: string, immediate: boolean = true) => {
       if (PlayerInfo.init === false) {
         PlayerInfo.init = true;
         usePlayer.meta.init();
       }
 
-      PlayerInfo.queue = [...PlayerInfo.queue, { url, meta }];
-      PlayerInfo.qi = PlayerInfo.queue.length - 1;
+      if (immediate) {
+        PlayerInfo.queue = [...PlayerInfo.queue, { url, meta }];
+        PlayerInfo.qi = PlayerInfo.queue.length - 1;
+      }
 
       url = url.replace("http://", "https://");
 
@@ -347,7 +353,15 @@ export const usePlayer = {
         PlayerInfo.qi++;
         usePlayer.playback.play(
           PlayerInfo.queue[PlayerInfo.qi].meta,
-          PlayerInfo.queue[PlayerInfo.qi].url
+          PlayerInfo.queue[PlayerInfo.qi].url,
+          false
+        );
+      } else if (PlayerInfo.controls.loop) {
+        PlayerInfo.qi = 0;
+        usePlayer.playback.play(
+          PlayerInfo.queue[PlayerInfo.qi].meta,
+          PlayerInfo.queue[PlayerInfo.qi].url,
+          false
         );
       }
     },
@@ -356,7 +370,8 @@ export const usePlayer = {
         PlayerInfo.qi--;
         usePlayer.playback.play(
           PlayerInfo.queue[PlayerInfo.qi].meta,
-          PlayerInfo.queue[PlayerInfo.qi].url
+          PlayerInfo.queue[PlayerInfo.qi].url,
+          false
         );
       }
     },
