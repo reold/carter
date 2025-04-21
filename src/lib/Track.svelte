@@ -3,7 +3,7 @@
   import { cubicInOut } from "svelte/easing";
 
   const {
-    song,
+    track,
     playing = false,
     onPlay,
     onAddToQueue,
@@ -55,7 +55,12 @@
       }
     }}
   >
-    <img src={song.image} alt="cover art" class="max-h-[7dvh]" loading="lazy" />
+    <img
+      src={track.image}
+      alt="cover art"
+      class="max-h-[7dvh]"
+      loading="lazy"
+    />
   </button>
   <button
     class="flex flex-col overflow-x-hidden -space-y-1 justify-center w-full text-left p-0"
@@ -70,7 +75,7 @@
         ? 'text-violet-600 dark:text-violet-500'
         : ''}"
     >
-      {@html song.title}
+      {@html track.title}
     </h2>
     <span
       class="font-base text-[0.7em] text-black/80 dark:text-white/80 pl-2 truncate max-w-full"
@@ -88,7 +93,7 @@
           d="m16.49 12 3.75 3.75m0 0-3.75 3.75m3.75-3.75H3.74V4.499"
         />
       </svg>
-      {@html song.subtitle}</span
+      {@html track.subtitle}</span
     >
   </button>
   {#if showActions}
@@ -98,7 +103,7 @@
     >
       <button
         class="bg-black/5 dark:bg-white/5 text-black dark:text-white rounded-full"
-        aria-label="add song to queue"
+        aria-label="add track to queue"
         onclick={onAddToQueue}
         ><svg
           xmlns="http://www.w3.org/2000/svg"
