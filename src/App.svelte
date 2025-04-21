@@ -13,7 +13,7 @@
   const routing: { [key: string]: { component: any } } = {
     home: { component: () => import("./pages/Home.svelte") },
     dashboard: {
-      component: () => import("./pages/Dash.svelte"),
+      component: () => import("./pages/dash/Dash.svelte"),
     },
     geet: {
       component: () => import("./pages/Geet.svelte"),
