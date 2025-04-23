@@ -1,0 +1,1 @@
+import{aw as t,a9 as h,v as x,ak as S,ax as T}from"./index-Cm5MpG3k.js";function k(r,i){return r===i||(r==null?void 0:r[T])===i}function w(r={},i,a,c){return t(()=>{var f,s;return h(()=>{f=s,s=[],x(()=>{r!==a(...s)&&(i(r,...s),f&&k(a(...f),r)&&i(null,...f))})}),()=>{S(()=>{s&&k(a(...s),r)&&i(null,...s)})}}),r}export{w as b};
