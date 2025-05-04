@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade, fly, slide } from "svelte/transition";
   import JamEntry from "../JAMEntry.svelte";
+
   import { onMount } from "svelte";
   import { usePlayer } from "../../player.svelte";
   import SelectPlaylist from "./SelectPlaylist.svelte";
@@ -9,6 +10,14 @@
   import { ViewInfo, TabEnum } from "../../store.svelte";
 
   let { jamInfo = { create: true } } = $props();
+
+  let dragProg = $state({
+    initial: 0,
+    current: 0,
+    is: false,
+    startX: 0,
+    clientWidth: 0,
+  });
 
   onMount(() => {
     // mazhaneer thullikal
@@ -157,7 +166,7 @@
   >
     {#if usePlayer.info.init}
       <div
-        class="h-[8dvh] w-[95dvw] bg-black/5 dark:bg-white/5 rounded-md backdrop-brightness-[80%] dark:backdrop-brightness-[20%] backdrop-blur-lg flex flex-row items-center px-[0.5dvh] pt-[0.5dvh] border-t-[1px] border-white/5 dark:border-white/5 overflow-hidden"
+        class="h-[8dvh] w-[95dvw] ring-1 ring-black/10 dark:ring-white/10 bg-black/5 dark:bg-white/5 rounded-md backdrop-brightness-[80%] dark:backdrop-brightness-[20%] backdrop-blur-lg flex flex-row items-center px-[0.5dvh] pt-[0.5dvh] border-t-[1px] border-white/5 dark:border-white/5 overflow-hidden"
       >
         <div
           class="h-[2px] inset-0 w-full bg-black/5 dark:bg-white/5 absolute top-0 rounded-full overflow-hidden"
@@ -321,9 +330,9 @@
       out:fly={{ duration: 500, y: 750 }}
       class="absolute top-0 left-0 w-[100dvw] h-[100dvh] bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md overflow-y-scroll no-scrollbar"
     >
-      <div class="w-full flex flex-col items-center">
+      <div class="w-full flex flex-col items-center relative">
         <div
-          class="flex flex-row justify-between w-full pt-[2.5dvw] px-[2.5dvw]"
+          class="flex flex-row justify-between w-full py-[2.5dvw] px-[2.5dvw] sticky top-0 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md z-10"
         >
           <button
             onclick={() => ($ViewInfo.sheets.track = false)}
@@ -389,22 +398,57 @@
 
         <div class="mt-12">
           <div
-            class="min-h-[5px] w-[95dvw] bg-black/5 dark:bg-white/5 rounded-full overflow-hidden relative"
+            class="h-10 flex flex-col justify-center w-min -my-3"
+            onpointerdown={(e) => {
+              dragProg.is = true;
+              dragProg.startX = e.clientX;
+              dragProg.initial = usePlayer.info.t / usePlayer.info.dur;
+            }}
+            onpointermove={(e) => {
+              if (!dragProg.is) return;
+
+              const dx = e.clientX - dragProg.startX;
+              dragProg.current = Math.min(
+                Math.max(dragProg.initial + dx / dragProg.clientWidth, 0),
+                1
+              );
+            }}
+            onpointerup={(e) => {
+              dragProg.is = false;
+              usePlayer.playback.seekTo(dragProg.current * usePlayer.info.dur);
+            }}
+            role="progressbar"
           >
-            {#if usePlayer.info.fetch != 0}
-              <div
-                class="h-full bg-black/20 dark:bg-white/20 absolute"
-                style="width: {usePlayer.info.fetch}%;"
-              ></div>
-            {/if}
             <div
-              class="h-full bg-red-500 dark:bg-red-900 absolute z-10"
-              style="width: {(usePlayer.info.t / usePlayer.info.dur) * 100}%;"
-            ></div>
+              class="{dragProg.is
+                ? 'h-[10px]'
+                : 'min-h-[5px]'} w-[95dvw] bg-black/5 dark:bg-white/5 rounded-full overflow-hidden relative transition-transform duration-200"
+              bind:clientWidth={dragProg.clientWidth}
+            >
+              {#if usePlayer.info.fetch != 0}
+                <div
+                  class="h-full bg-black/20 dark:bg-white/20 absolute"
+                  style="width: {usePlayer.info.fetch}%;"
+                ></div>
+              {/if}
+              <div
+                class="h-full bg-red-500 dark:bg-red-900 absolute"
+                style="width: {dragProg.is
+                  ? dragProg.current * 100
+                  : (usePlayer.info.t / usePlayer.info.dur) * 100}%;"
+              ></div>
+            </div>
           </div>
+
           <div class="flex flex-row justify-between items-center text-sm">
             <p>
-              {new Date(usePlayer.info.t * 1000).toISOString().slice(14, 19)}
+              {new Date(
+                dragProg.is
+                  ? dragProg.current * usePlayer.info.dur * 1000
+                  : usePlayer.info.t * 1000
+              )
+                .toISOString()
+                .slice(14, 19)}
             </p>
             <p>
               {new Date(usePlayer.info.dur * 1000).toISOString().slice(14, 19)}
