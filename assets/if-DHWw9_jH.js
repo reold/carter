@@ -1,1 +1,0 @@
-import{S as E,a2 as I,aj as i,a3 as u,ak as o,aB as N}from"./index-Ba_G2Knt.js";function k(_,b,[n,h]=[0,0]){var t=_,a=null,e=null,f=N,v=n>0?I:0,s=!1;const p=(r,l=!0)=>{s=!0,c(l,r)},c=(r,l)=>{f!==(f=r)&&(f?(a?i(a):l&&(a=u(()=>l(t))),e&&o(e,()=>{e=null})):(e?i(e):l&&(e=u(()=>l(t,[n+1,h]))),a&&o(a,()=>{a=null})))};E(()=>{s=!1,b(p),s||c(null,null)},v)}export{k as i};
