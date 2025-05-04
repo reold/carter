@@ -161,6 +161,13 @@ export const usePlayer = {
       usePlayer.meta.sync();
     },
 
+    seekTo: (time: number) => {
+      if (time < 0) time = 0;
+      if (time > PlayerInfo.dur) time = PlayerInfo.dur;
+      PlayerInfo.audioElm.currentTime = time;
+      PlayerInfo.t = time;
+    },
+
     appendQueue: async (
       meta: {
         id: string;
