@@ -13,6 +13,7 @@
   let touch = $state({
     held: false,
     originX: 0,
+    originY: 0,
   });
 
   let focused = $state(false);
@@ -28,12 +29,18 @@
   ontouchstart={(e) => {
     touch.held = true;
     touch.originX = e.touches[0].clientX;
+    touch.originY = e.touches[0].clientY;
     focused = true;
   }}
   ontouchmove={(e) => {
     if (touch.held) {
       const dX = e.touches[0].clientX - touch.originX;
-      if (dX < -50) {
+      const dY = e.touches[0].clientY - touch.originY;
+
+      if (Math.abs(dY) > 50) {
+        touch.held = false;
+        focused = false;
+      } else if (dX < -50) {
         showActions = true;
       } else {
         showActions = false;
