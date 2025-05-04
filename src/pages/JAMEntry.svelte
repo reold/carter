@@ -1,222 +1,213 @@
 <script lang="ts">
-  import { roomServices } from "../services.svelte";
   import Sheet from "../components/Sheet.svelte";
   import { onMount } from "svelte";
+  import Peer from "peerjs";
+  import type { DataConnection } from "peerjs";
 
-  let { visible = $bindable(false), info = { create: true } } = $props();
-  let username = $state("");
-  let clientID = $state("");
-  let computedClientID = $derived.by(async () => {
-    return await sha256(`${username}-${navigator.userAgent}`);
+  let { visible = $bindable(false), info = { create: true, roomId: "" } } =
+    $props();
+
+  let form = $state({
+    username: "",
+    sessionName: "",
+    warning: "",
   });
-  let sessionName = $state("");
-  let formWarning = $state("");
+
   let msgsDiv: HTMLDivElement | undefined = $state(undefined);
-
-  onMount(() => {
-    if (!info.create) {
-      room.id = info.roomId;
-      sessionName = "loading room information";
-      roomServices.infoRoom(room.id).then((data) => {
-        if (data["success"]) sessionName = data["room_name"];
-        else {
-          formWarning = `error: ${data["fault"]}`;
-          sessionName = "room doesn't exist";
-        }
-      });
-    }
-  });
+  let peer: Peer | undefined = $state(undefined);
+  let connections = $state(new Set<DataConnection>());
 
   let room = $state({
     connected: false,
     activity: "",
     id: "",
+    clientid: "",
     name: "",
     messages: [] as { username: string; content: string; time?: string }[],
   });
 
+  // auto-scroll to bottom of chat
   $effect(() => {
     room.messages;
-    if (msgsDiv)
-      msgsDiv.scrollTo({
-        top: msgsDiv.scrollHeight || 0,
-        behavior: "smooth",
-      });
+    msgsDiv?.scrollTo({
+      top: msgsDiv.scrollHeight,
+      behavior: "smooth",
+    });
   });
 
-  // username = "aadhi";
-  // room = {
-  //   connected: true,
-  //   id: "1234",
-  //   name: "Wassup",
-  //   messages: [
-  //     { username: "aarjav", content: "Good morning!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "aadhi", content: "Morning to you too!" },
-  //     { username: "carter", content: "Morning to you too!" },
-  //     { username: "server", content: "" },
-  //     {
-  //       username: "aadhi is the main player in every single game",
-  //       content: "Morning to you too!",
-  //     },
-  //     {
-  //       username: "aadhi",
-  //       content:
-  //         "Morning to you too! Im doing dasdfjlsdkjfasdfkl dsdfsdfkjalsdfl kasdjf ksadjf askdjfaksldjf aslkdfj asdklfj asdklfj askdf jaskd jksdfj asldkf",
-  //     },
-  //   ],
-  // };
+  onMount(() => {
+    // // prettier-ignore
+    // room = JSON.parse(` {"connected":true,"activity":"(1/1)","id":"9801ad8f-46df-4a21-b7e1-b4c2a75e2967","name":"reold's Music Session is the best in the world","messages":[{"type":"msg","username":"reold","content":"Hell owordl","time":"1745439165.127"},{"type":"msg","username":"reold","content":"my name is aadhi","time":"1745439168.261"},{"type":"msg","username":"reold","content":"wow","time":"1745439168.831"},{"type":"msg","username":"reold","content":"nice ","time":"1745439170.461"},{"type":"msg","username":"reold","content":"indigo","time":"1745439172.156"}]}`);
+    // return;
 
-  let messageContent = $state("");
+    peer = new Peer();
 
-  async function sha256(source: string) {
-    const msgBuffer = new TextEncoder().encode(source); // Encode source as bytes
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer); // Hash the source
-    const hashArray = Array.from(new Uint8Array(hashBuffer)); // Convert to byte array
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join(""); // Convert bytes to hex
-    return hashHex;
+    peer.on("open", (id) => {
+      room.clientid = id;
+
+      // set room id for the session
+      if (info.create) {
+        room.id = id;
+      } else {
+        room.id = info.roomId;
+      }
+    });
+
+    peer.on("connection", setupConnection);
+
+    return () => {
+      connections.forEach((conn) => conn.close());
+      peer?.destroy();
+    };
+  });
+
+  function setupConnection(conn: DataConnection) {
+    connections.add(conn);
+
+    // broadcast room name
+    if (info.create) {
+      conn.on("open", () => {
+        console.log("sending room name to", conn.metadata.username);
+        conn.send({
+          type: "meta",
+          roomname: room.name,
+        });
+      });
+    }
+
+    // add client connection message
+    room.messages = [
+      ...room.messages,
+      {
+        username: "server",
+        content: `${conn.metadata?.username || "A user"} has connected`,
+        time: String(Date.now() / 1000),
+      },
+    ];
+
+    updateActivity();
+
+    conn.on("data", (data: any) => {
+      console.log("received data", data);
+
+      if (data.type === "msg") {
+        room.messages = [
+          ...room.messages,
+          {
+            username: data.username,
+            content: data.content,
+            time: String(Date.now() / 1000),
+          },
+        ];
+      }
+
+      if (data.type == "meta") {
+        console.log("received room name", data.roomname);
+        room.name = data.roomname;
+      }
+    });
+
+    conn.on("close", () => {
+      connections.delete(conn);
+      room.messages = [
+        ...room.messages,
+        {
+          username: "server",
+          content: `${conn.metadata?.username || "A user"} has disconnected`,
+          time: String(Date.now() / 1000),
+        },
+      ];
+      updateActivity();
+    });
   }
 
-  const startListening = () => {
-    roomServices.listenRoom(
-      clientID,
-      (e) => {
-        const data = JSON.parse(e.data);
+  function updateActivity() {
+    room.activity = `(${connections.size + 1})`;
+  }
 
-        switch (data["type"]) {
-          case "msg":
-            room.messages = [
-              ...room.messages,
-              {
-                username: data["username"],
-                content: data["content"],
-                time: data["time"],
-              },
-            ];
-            room.activity = `(${data["activity"].filter((user: { active: boolean }) => user.active == true).length}/${data["activity"].length})`;
-            break;
-          case "conn":
-            room.messages = [
-              ...room.messages,
-              {
-                username: "server",
-                content: data["info"],
-                time: String(Date.now() / 1000),
-              },
-            ];
-            break;
-        }
+  const handleCreate = () => {
+    form.username = form.username.trim();
+    if (form.username.length < 4) {
+      form.warning = "username must be more than 3 characters in length";
+      return;
+    }
+    if (form.sessionName.length == 0) {
+      form.sessionName = `${form.username}'s session`;
+    }
+
+    room.name = form.sessionName;
+    room.connected = true;
+    updateActivity();
+
+    room.messages = [
+      ...room.messages,
+      {
+        username: "svara",
+        content: "created session successfully, invite your friends",
+        time: String(Date.now() / 1000),
       },
-      (e) => {
-        room.messages = [
-          ...room.messages,
-          {
-            username: "server",
-            content: "connection lost, retrying (browser-initiated)",
-            time: String(Date.now() / 1000),
-          },
-        ];
-        console.error(e);
-      }
-    );
+    ];
   };
 
-  const handleCreate = async () => {
-    username = username.trim();
-    if (username.length < 4) {
-      formWarning = "username must be more than 3 characters in length";
-      return;
-    }
-    if (sessionName.length == 0) {
-      sessionName = `${username}'s Music Session`;
-    }
-
-    clientID = await computedClientID;
-    roomServices
-      .createRoom(clientID, username, sessionName)
-      .then((data) => {
-        if (data["success"]) {
-          room.id = data["room_id"];
-          room.name = sessionName;
-          room.connected = true;
-          startListening();
-        } else {
-          formWarning = `error: ${data["fault"]}`;
-        }
-      })
-      .catch((e) => {
-        room.messages = [
-          ...room.messages,
-          {
-            username: "server",
-            content: "unable to create room",
-            time: String(Date.now() / 1000),
-          },
-        ];
-        console.error(e);
-      });
-  };
-
-  const handleJoin = async () => {
-    username = username.trim();
-    if (username.length < 4) {
-      formWarning = "username must be more than 3 characters in length";
+  const handleJoin = () => {
+    if (!info.roomId) {
+      form.warning = "room id is required";
       return;
     }
 
-    clientID = await computedClientID;
-    roomServices
-      .joinRoom(clientID, room.id, username)
-      .then((data) => {
-        if (data["success"]) {
-          room.name = data["room_name"];
-          room.connected = true;
-          startListening();
-        } else {
-          formWarning = `error: ${data["fault"]}`;
-        }
-      })
-      .catch((e) => {
-        room.messages = [
-          ...room.messages,
-          {
-            username: "server",
-            content: "unable to join room",
+    form.username = form.username.trim();
+    if (form.username.length < 4) {
+      form.warning = "username must be more than 3 characters in length";
+      return;
+    }
 
-            time: String(Date.now() / 1000),
-          },
-        ];
-        console.error(e);
-      });
+    if (!info.roomId || !peer) {
+      form.warning = "Invalid room ID or peer not initialized";
+      return;
+    }
+
+    const conn = peer.connect(info.roomId, {
+      metadata: { username: form.username },
+    });
+
+    conn.on("open", () => {
+      setupConnection(conn);
+      room.connected = true;
+      room.name = "Untitled Session";
+      updateActivity();
+
+      room.messages = [
+        ...room.messages,
+        {
+          username: "svara",
+          content: "joined session successfully, invite your friends",
+          time: String(Date.now() / 1000),
+        },
+      ];
+    });
   };
 
-  const handleSendMessage = async () => {
-    if (messageContent.length == 0) return;
+  const handleSendMessage = () => {
+    if (!messageContent.length) return;
 
-    const msg = messageContent;
+    const messageData = {
+      type: "msg",
+      username: form.username,
+      content: messageContent,
+      time: String(Date.now() / 1000),
+    };
+
+    // Add own message to chat
+    room.messages = [...room.messages, messageData];
+
+    // Broadcast to all peers
+    connections.forEach((conn) => {
+      conn.send(messageData);
+    });
+
     messageContent = "";
 
-    await roomServices.broadcastRoom(await computedClientID, room.id, msg);
+    // console.log(JSON.stringify(room));
   };
 
   const handleShare = () => {
@@ -226,27 +217,39 @@
     room.messages = [
       ...room.messages,
       {
-        username: "carter",
-        content: "invite link copied to clipboard",
+        username: "svara",
+        content: "invite copied to clipboard",
         time: String(Date.now() / 1000),
       },
     ];
   };
+
+  let messageContent = $state("");
 </script>
 
 <Sheet bind:visible>
   {#snippet title()}
-    <h1 class="text-white select-none">
-      {!info.create ? "Join " : ""}JAM Session<span
-        class="bg-yellow-500 text-black rounded-lg p-0.5 text-xs ml-1"
-        >beta</span
-      >
-    </h1>{/snippet}
+    <h1 class="text-black dark:text-white select-none truncate max-w-[80dvw]">
+      {#if !room.connected}
+        <span class="text-black/50 dark:text-white/50">
+          {!info.create ? "Join:" : "Create:"}
+        </span>
+        JAM Session
+      {:else}
+        <span class="text-black/50 dark:text-white/50 text-sm">
+          {room.activity}
+        </span>
+        {room.name}
+      {/if}
+    </h1>
+  {/snippet}
   {#snippet body()}
     {#if !room.connected}
-      <p class="text-zinc-100 text-sm select-none">
+      <p class="text-black dark:text-white text-sm select-none">
         JAM Sessions let you and your friends enjoy music together, no matter
-        where you are in the world. <span class=" text-zinc-500">
+        where you are in the world. <span
+          class=" text-black/50 dark:text-white/50"
+        >
           Your client ID is unique to your browser. If you switch browsers,
           you'll need to start a new session, as your previous one cannot be
           resumed.
@@ -254,7 +257,7 @@
       </p>
       <div class="flex flex-col space-y-2 w-[95dvw] mt-[5dvh]">
         <p class="text-red-500 text-xs">
-          {formWarning}
+          {form.warning}
         </p>
         <div
           class="text-white flex flex-row items-center bg-white/5 rounded-md"
@@ -276,32 +279,29 @@
             type="text"
             name="username"
             id="username"
-            bind:value={username}
+            bind:value={form.username}
             placeholder="Username"
             class="bg-transparent ring-0 focus:outline-none w-full py-1 pr-2"
           />
         </div>
-        <input
-          type="text"
-          name="room title"
-          id="room title"
-          bind:value={sessionName}
-          disabled={!info.create}
-          placeholder="Session Name, e.g., Varun's Party Music"
-          class="bg-white/5 ring-0 focus:outline-none rounded-md py-1 px-2 text-white"
-        />
+        {#if info.create}
+          <input
+            type="text"
+            name="room title"
+            id="room title"
+            bind:value={form.sessionName}
+            placeholder="Session Name, e.g., Varun's Party Music"
+            class="bg-white/5 ring-0 focus:outline-none rounded-md py-1 px-2 text-white"
+          />
+        {/if}
         <p
           class="text-zinc-500 flex flex-row items-center space-x-2 h-[2ch] overflow-hidden"
         >
-          <span class="text-xs">client-id: </span>
-          {#await computedClientID}
-            computing
-          {:then userAgentSHA}
-            <span
-              class="truncate w-[75dvw] inline-block text-xs whitespace-nowrap"
-              >{`${userAgentSHA}`}</span
-            >
-          {/await}
+          <span class="text-xs">room-id: </span>
+          <span
+            class="truncate w-[75dvw] inline-block text-xs whitespace-nowrap"
+            >{room.id}</span
+          >
         </p>
         <button
           class="text-white bg-purple-500 rounded-md font-bold select-none"
@@ -330,22 +330,15 @@
       </div>
     {:else}
       <div
-        class="w-[95dvw] h-[80dvh] max-h-[80dvh] overflow-y-scroll overflow-x-hidden text-white ring-1 ring-white/5 my-2 rounded-t-md"
+        class="w-[100dvw] h-[80dvh] max-h-[70dvh] overflow-y-scroll overflow-x-hidden text-white ring-1 ring-white/5 mb-2"
         bind:this={msgsDiv}
       >
         <div
-          class="sticky top-0 flex flex-row border-b-[0px] bg-gradient-to-b from-zinc-900 to-zinc-900/50 border-zinc-500/25 w-[95dvw] h-[5dvh]"
+          class="sticky top-0 flex flex-row justify-end border-b-[0px] w-[100dvw] h-[5dvh]"
         >
-          <h1
-            class="text-xl text-white font-semibold w-[80%] text-center place-content-center"
-          >
-            {room.activity}
-            {room.name}
-          </h1>
-
           <button
             aria-label="copy session invite link"
-            class="w-[20%] flex flex-col items-center justify-center rounded-md overflow-hidden p-0 m-0 max-h-[3em] select-none"
+            class="w-[15%] flex flex-col items-center justify-center rounded-bl-md overflow-hidden p-0 m-0 max-h-[3em] select-none bg-gradient-to-b from-black/10 dark:from-white/10 to-black/5 dark:to-white/5 backdrop-blur-3xl"
             onclick={() => handleShare()}
           >
             <svg
@@ -364,32 +357,35 @@
         </div>
         {#each room.messages as msg, mi}
           <div
-            class="{msg.username == username
+            class="{msg.username == form.username
               ? 'ml-auto rounded-br-none mr-1'
               : 'rounded-bl-none ml-1'} {mi - 1 !== -1 &&
             room.messages[mi - 1]['username'] === msg['username']
               ? 'mt-[0.25em]'
               : 'mt-[0.5em]'} rounded-lg p-1 bg-white/5 flex flex-col items-start justify-center w-fit min-w-[20dvw] max-w-[80dvw]"
           >
-            <p
-              class="{['server', 'carter'].includes(msg.username)
-                ? 'text-red-400'
-                : 'text-purple-400'} text-lg font-medium px-0.5 rounded-r-md inline-block max-w-[95%] truncate"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="h-[0.8em] inline -mr-1"
+            {#if room.messages[mi - 1]?.username !== msg.username}
+              <p
+                class="{['server', 'svara'].includes(msg.username)
+                  ? 'text-red-400'
+                  : 'text-purple-400'} text-lg font-medium px-0.5 rounded-r-md inline-block max-w-[95%] truncate"
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M17.834 6.166a8.25 8.25 0 1 0 0 11.668.75.75 0 0 1 1.06 1.06c-3.807 3.808-9.98 3.808-13.788 0-3.808-3.807-3.808-9.98 0-13.788 3.807-3.808 9.98-3.808 13.788 0A9.722 9.722 0 0 1 21.75 12c0 .975-.296 1.887-.809 2.571-.514.685-1.28 1.179-2.191 1.179-.904 0-1.666-.487-2.18-1.164a5.25 5.25 0 1 1-.82-6.26V8.25a.75.75 0 0 1 1.5 0V12c0 .682.208 1.27.509 1.671.3.401.659.579.991.579.332 0 .69-.178.991-.579.3-.4.509-.99.509-1.671a8.222 8.222 0 0 0-2.416-5.834ZM15.75 12a3.75 3.75 0 1 0-7.5 0 3.75 3.75 0 0 0 7.5 0Z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              {msg.username}
-            </p>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  class="h-[0.8em] inline -mr-1"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M17.834 6.166a8.25 8.25 0 1 0 0 11.668.75.75 0 0 1 1.06 1.06c-3.807 3.808-9.98 3.808-13.788 0-3.808-3.807-3.808-9.98 0-13.788 3.807-3.808 9.98-3.808 13.788 0A9.722 9.722 0 0 1 21.75 12c0 .975-.296 1.887-.809 2.571-.514.685-1.28 1.179-2.191 1.179-.904 0-1.666-.487-2.18-1.164a5.25 5.25 0 1 1-.82-6.26V8.25a.75.75 0 0 1 1.5 0V12c0 .682.208 1.27.509 1.671.3.401.659.579.991.579.332 0 .69-.178.991-.579.3-.4.509-.99.509-1.671a8.222 8.222 0 0 0-2.416-5.834ZM15.75 12a3.75 3.75 0 1 0-7.5 0 3.75 3.75 0 0 0 7.5 0Z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                {msg.username}
+              </p>
+            {/if}
+
             <p class="px-2 text-white -mt-[0.2em] text-base">{msg.content}</p>
             {#if msg.time}
               <p class="text-xs ml-auto">
@@ -407,7 +403,7 @@
         {/each}
       </div>
       <div
-        class="text-white flex flex-row items-center bg-white/5 rounded-md w-[95dvw]"
+        class="text-white flex flex-row items-center bg-white/5 rounded-md w-[95dvw] bg-red-500"
       >
         <input
           type="text"
