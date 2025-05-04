@@ -14,8 +14,37 @@
     held: false,
     originX: 0,
     originY: 0,
+    completed: false,
   });
 
+  const swipeController = {
+    start: (x: number, y: number) => {
+      touch.held = true;
+      touch.originX = x;
+      touch.originY = y;
+      focused = true;
+    },
+    move: (x: number, y: number) => {
+      if (touch.held) {
+        const dX = x - touch.originX;
+        const dY = y - touch.originY;
+
+        if (Math.abs(dY) > 50) {
+          touch.held = false;
+          focused = false;
+        } else if (dX < -50) {
+          showActions = true;
+        } else {
+          showActions = false;
+        }
+      }
+    },
+    end: () => {
+      touch.held = false;
+      touch.completed = true;
+      focused = false;
+    },
+  };
   let focused = $state(false);
 
   let showActions = $state(false);
@@ -26,37 +55,23 @@
   class="w-full h-[10dvh] pl-2 min-h-[7dvh] ring-zinc-500 text-black dark:text-white overflow-hidden flex flex-row space-x-2 border-b-[1px] border-black/5 dark:border-white/5 py-2 select-none transition-colors duration-100 {focused
     ? 'bg-black/5 dark:bg-white/5'
     : 'bg-transparent'}"
-  ontouchstart={(e) => {
-    touch.held = true;
-    touch.originX = e.touches[0].clientX;
-    touch.originY = e.touches[0].clientY;
-    focused = true;
+  onpointerdown={(e) => {
+    swipeController.start(e.clientX, e.clientY);
   }}
-  ontouchmove={(e) => {
-    if (touch.held) {
-      const dX = e.touches[0].clientX - touch.originX;
-      const dY = e.touches[0].clientY - touch.originY;
-
-      if (Math.abs(dY) > 50) {
-        touch.held = false;
-        focused = false;
-      } else if (dX < -50) {
-        showActions = true;
-      } else {
-        showActions = false;
-      }
-    }
+  onpointermove={(e) => {
+    swipeController.move(e.clientX, e.clientY);
   }}
-  ontouchend={(e) => {
-    touch.held = false;
-    focused = false;
+  onpointerup={(e) => {
+    swipeController.end();
   }}
+  role="button"
+  tabindex="0"
 >
   <button
     class="p-0 m-0 max-w-[20%] my-auto transition-transform duration-200 rounded-[0.5em] overflow-hidden {focused
       ? 'scale-105'
       : ''}"
-    onclick={() => {
+    onclick={(e) => {
       if (!playing) {
         onPlay();
       }
@@ -71,11 +86,6 @@
   </button>
   <button
     class="flex flex-col overflow-x-hidden -space-y-1 justify-center w-full text-left p-0"
-    onclick={() => {
-      if (!playing) {
-        onPlay();
-      }
-    }}
   >
     <h2
       class="font-medium text-base max-w-full truncate {playing
