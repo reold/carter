@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "deploy": "gh-pages -d dist",
+    "build": "vite build && touch dist/.nojekyll",
+    "deploy": "gh-pages -d dist --dotfiles",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json"
   },
