@@ -1,1 +1,1 @@
-{"name":"Svara","short_name":"Svara","description":"Advanced mobile music player","start_url":"/carter#dashboard","display":"standalone","background_color":"#ffffff","theme_color":"#000000","lang":"en","scope":"/carter/"}
+{"name":"Svara AMMP","short_name":"Svara","description":"An advanced mobile music player by Reold","start_url":"/carter#dashboard","display":"standalone","background_color":"#ffffff","theme_color":"#000000","lang":"en","scope":"/carter/","icons":[{"src":"/svara.svg","sizes":"any","type":"image/webp"}]}
