@@ -1,4 +1,4 @@
-![](https://reold.github.io/carter/carter.svg)
+![](https://raw.githubusercontent.com/reold/carter/refs/heads/main/docs/Svara-Banner.webp)
 
 # Carter: Advanced Mobile Music Player
 
