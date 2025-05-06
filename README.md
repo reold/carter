@@ -1,4 +1,4 @@
-![](https://raw.githubusercontent.com/reold/carter/refs/heads/main/docs/svara-banner.webp)
+![](https://raw.githubusercontent.com/reold/svara/refs/heads/main/docs/svara-banner.webp)
 
 # Svara: Advanced Mobile Music Player
 
