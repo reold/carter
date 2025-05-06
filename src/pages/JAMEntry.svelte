@@ -35,25 +35,29 @@
     });
   });
 
+  $effect(() => {
+    if (visible && !peer) {
+      peer = new Peer();
+
+      peer.on("open", (id) => {
+        room.clientid = id;
+
+        // set room id for the session
+        if (info.create) {
+          room.id = id;
+        } else {
+          room.id = info.roomId;
+        }
+      });
+
+      peer.on("connection", setupConnection);
+    }
+  });
+
   onMount(() => {
     // // prettier-ignore
     // room = JSON.parse(` {"connected":true,"activity":"(1/1)","id":"9801ad8f-46df-4a21-b7e1-b4c2a75e2967","name":"reold's Music Session is the best in the world","messages":[{"type":"msg","username":"reold","content":"Hell owordl","time":"1745439165.127"},{"type":"msg","username":"reold","content":"my name is aadhi","time":"1745439168.261"},{"type":"msg","username":"reold","content":"wow","time":"1745439168.831"},{"type":"msg","username":"reold","content":"nice ","time":"1745439170.461"},{"type":"msg","username":"reold","content":"indigo","time":"1745439172.156"}]}`);
     // return;
-
-    peer = new Peer();
-
-    peer.on("open", (id) => {
-      room.clientid = id;
-
-      // set room id for the session
-      if (info.create) {
-        room.id = id;
-      } else {
-        room.id = info.roomId;
-      }
-    });
-
-    peer.on("connection", setupConnection);
 
     return () => {
       connections.forEach((conn) => conn.close());
@@ -67,7 +71,6 @@
     // broadcast room name
     if (info.create) {
       conn.on("open", () => {
-        console.log("sending room name to", conn.metadata.username);
         conn.send({
           type: "meta",
           roomname: room.name,
@@ -88,8 +91,6 @@
     updateActivity();
 
     conn.on("data", (data: any) => {
-      console.log("received data", data);
-
       if (data.type === "msg") {
         room.messages = [
           ...room.messages,
@@ -102,7 +103,6 @@
       }
 
       if (data.type == "meta") {
-        console.log("received room name", data.roomname);
         room.name = data.roomname;
       }
     });
