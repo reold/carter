@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { useStorage } from "./storage.svelte";
 
-  import CarterLogo from "./lib/CarterLogo.svelte";
+  import SvaraLogo from "./lib/SvaraLogo.svelte";
   import { fade } from "svelte/transition";
   import { ViewInfo } from "./store.svelte";
 
@@ -51,9 +51,7 @@
     class="h-[100dvh] flex flex-col items-center justify-center px-[2.5dvw] text-black dark:text-white bg-white dark:bg-black"
     transition:fade={{ duration: 150, delay: 100 }}
   >
-    <CarterLogo
-      class="h-[30dvh] w-[30dvh] ring-1 ring-black dark:ring-white rounded-full animate-pulse"
-    />
+    <SvaraLogo class="h-[30dvh] w-[30dvh] animate-pulse" />
     <h1 class="text-2xl font-medium text-center mt-8">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -72,7 +70,7 @@
       </svg>Loading...
     </h1>
     <p class="text-black/80 dark:text-white/50 text-center text-sm max-w-[75%]">
-      Carter loads pages on-demand, so you only get what you need
+      Svara loads pages on-demand, so you only get what you need
     </p>
   </div>
 {:then PageComponent}
