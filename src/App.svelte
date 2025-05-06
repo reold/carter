@@ -21,6 +21,9 @@
     auth: {
       component: () => import("./pages/Auth.svelte"),
     },
+    experiment: {
+      component: () => import("./pages/Experiment.svelte"),
+    },
   };
 
   let route = $state(routing.home);
