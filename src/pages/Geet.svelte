@@ -156,7 +156,7 @@
 </script>
 
 <svelte:head>
-  <title>Geet Builder - Carter</title>
+  <title>Geet Builder - Svara</title>
 </svelte:head>
 
 <h1 class="pl-2 bg-purple-500 font-black">Geet Builder(Standalone)</h1>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade, fly, slide } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
   import JamEntry from "../JAMEntry.svelte";
 
   import { onMount } from "svelte";
@@ -8,6 +8,7 @@
   import MoreActions from "./MoreActions.svelte";
 
   import { ViewInfo, TabEnum } from "../../store.svelte";
+  import { stringHelpers } from "../../utils.svelte";
 
   let { jamInfo = { create: true } } = $props();
 
@@ -111,7 +112,7 @@
 
 <svelte:head>
   <meta property="theme-color" content="#000" />
-  <title>{$ViewInfo.tab} - Carter</title>
+  <title>{stringHelpers.capitalize($ViewInfo.tab)} - Svara</title>
 </svelte:head>
 <div
   class="w-[100dwv] h-[100dvh] bg-white dark:bg-black text-black dark:text-white"
@@ -149,7 +150,7 @@
       <p
         class="text-black/80 dark:text-white/50 text-center text-sm max-w-[75%]"
       >
-        Carter loads pages on-demand, so you only get what you need
+        Svara loads pages on-demand, so you only get what you need
       </p>
     </div>
   {/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade } from "svelte/transition";
-  import CarterLogo from "../lib/CarterLogo.svelte";
+  import SvaraLogo from "../lib/SvaraLogo.svelte";
 
   import { masterServices } from "../services.svelte";
   import { config } from "../storage.svelte";
@@ -139,9 +139,9 @@
   >
     <div class="flex flex-row items-center justify-end space-x-[2ch] relative">
       <p class="text-xs absolute left-0">
-        Carter-JioSaavn Authenticator<br />developmental beta
+        Svara-JioSaavn Authenticator<br />developmental beta
       </p>
-      <CarterLogo class="size-[5dvh]" />
+      <SvaraLogo class="size-[5dvh]" />
       <svg
         role="img"
         viewBox="0 0 24 24"
@@ -158,9 +158,9 @@
         JioSaavn{/if}
     </h1>
     <p class="-mt-0.5 text-black/75 dark:text-white/75">
-      {#if staging.phase == "complete"}Authorized Carter access to your JioSaavn
+      {#if staging.phase == "complete"}Authorized Svara access to your JioSaavn
         account.{:else}
-        Authorize Carter access to your JioSaavn account.{/if}
+        Authorize Svara access to your JioSaavn account.{/if}
       {#if staging.phase == "email"}No JioSaavn email address?
         <a
           class="text-blue-600/85 dark:text-blue-500/85 after:content-['_↗']"
@@ -247,7 +247,7 @@
           </p>
           <span
             class="text-[10px] bg-black/50 dark:bg-white/50 p-0.5 text-white dark:text-black"
-            >CARTERJIOSAAVN_ {staging.infoBuild.profile.uid}</span
+            >SVARAJIOSAAVN_ {staging.infoBuild.profile.uid}</span
           >
         </div>
       {/if}
@@ -283,7 +283,9 @@
     {#if staging.phase == "email" && staging.loading == false}
       <button
         transition:fade={{ duration: 500 }}
-        onclick={handleContinue}
+        onclick={() => {
+          window.location.hash = "#dashboard";
+        }}
         type="button"
         class="w-full text-sm bg-black/25 dark:bg-white/15 dark:text-white text-black rounded-lg mt-2.5"
         class:animate-pulse={staging.loading}

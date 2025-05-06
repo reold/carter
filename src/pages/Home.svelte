@@ -12,7 +12,7 @@
     content={visible || infoVisible ? "#4d0a26" : "#be185d"}
   />
 
-  <title>Get Started - Carter</title>
+  <title>Get Started - Svara</title>
 </svelte:head>
 <main
   class="w-screen h-[100dvh] bg-gradient-to-b from-pink-700 to-purple-700 text-white overflow-y-clip flex flex-col items-center justify-center px-5"
@@ -20,7 +20,7 @@
   <h1
     class="text-[5em] font-black bg-clip-text bg-gradient-to-b from-violet-200 from-[60%] to-[90%] to-black text-transparent"
   >
-    Carter.
+    Svara.
   </h1>
   <p class="-mt-[1ch] text-center">
     Blazingly performant, light-weight and feature loaded music application for

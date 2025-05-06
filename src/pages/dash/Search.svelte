@@ -282,7 +282,7 @@
         Find for your favorite songs, playlists, artists and more!
         {#if $config.connections.jiosaavn.active}
           <span>
-            Carter is connected with <b
+            Svara is connected with <b
               >{$config.connections.jiosaavn.data.meta.firstname}'s
             </b>({$config.connections.jiosaavn.data.meta.username}) JioSaavn
             Account.

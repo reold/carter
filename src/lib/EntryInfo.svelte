@@ -8,7 +8,7 @@
     <h1
       class="w-full text-center place-content-center text-2xl font-black text-black dark:text-white"
     >
-      Carter Manager
+      Svara AMMP
     </h1>
   {/snippet}
   {#snippet body()}
@@ -19,7 +19,8 @@
       <p
         class="text-black/80 dark:text-white/50 text-sm max-h-[65dvh] overflow-y-scroll"
       >
-        Carter, formerly known as Cartier Manager, began as a passion project by
+        Svara, formerly known as Cartier/Carter Manager, began as a passion
+        project by
         <strong>@reold</strong> to create a truly free alternative to music
         management. The inspiration came from the frustration sparked by
         Spotify's "free tier" limitations, motivating the development of a
@@ -27,8 +28,8 @@
         This app combines cutting-edge technologies to deliver a smooth and reliable
         experience. The frontend is powered by <strong>Svelte 5</strong>, while
         the backend utilizes the robust capabilities of
-        <strong>FastAPI</strong>. Designed to operate cost-free, Carter
-        leverages <strong>PWA</strong>, <strong>Redis</strong>,
+        <strong>FastAPI</strong>. Designed to operate cost-free, Svara leverages
+        <strong>PWA</strong>, <strong>Redis</strong>,
         <strong>WebSockets</strong>, <strong>SSE</strong>, and
         <strong>serverless functions</strong>
         to ensure performance, scalability, and reliability. The user interface draws
@@ -57,7 +58,7 @@
         <button
           class="bg-white/70 dark:bg-black/10 text-blue-600 dark:text-blue-500 font-medium rounded-md"
           onclick={() => {
-            window.open("https://github.com/reold/carter");
+            window.open("https://github.com/reold/svara");
           }}
           ><svg
             role="img"
