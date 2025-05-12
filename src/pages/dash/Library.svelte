@@ -91,6 +91,9 @@
         </button>
         <button
           class="bg-gradient-to-b from-blue-400 to-blue-800 rounded-md font-bold text-white text-sm whitespace-nowrap"
+          onclick={() => {
+            window.location.hash = "#auth";
+          }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
