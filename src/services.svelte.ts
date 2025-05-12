@@ -5,6 +5,10 @@
 //     : // "https://vercel-cors-anywhere-6k64bb3kj-reolds-projects.vercel.app/"
 //       //"https://vercel-cors-anywhere-k6txcvnye-reolds-projects.vercel.app/"
 //       "https://vercel-cors-anywhere-one.vercel.app/") + "api?url=";
+import Peer from "peerjs";
+import type { DataConnection } from "peerjs";
+
+import { P2PInfo } from "./store.svelte";
 
 export const PROXY_URL = "https://vercel-cors-anywhere-one.vercel.app/api?url=";
 
@@ -168,6 +172,208 @@ const _roomServices = {
       `${_roomServices.api.room}/broadcast?id=${id}&room_id=${roomId}&msg=${msg}`
     );
     return data;
+  },
+};
+
+export const p2pServices = {
+  init: (
+    initiator: boolean = false,
+    invitation: { id: string } | undefined = undefined
+  ) => {
+    P2PInfo.initiator = initiator;
+
+    console.info("creating a new peer");
+    P2PInfo.peer = new Peer({
+      config: {
+        iceServers: [{ urls: "stun:stun1.l.google.com:19302" }],
+      },
+    });
+    //{
+    //   config: {
+    //     iceServers: [
+    //       { urls: "stun:stun.l.google.com:19302" },
+    //       { urls: "stun:stun.l.google.com:5349" },
+    //       { urls: "stun:stun1.l.google.com:3478" },
+    //       { urls: "stun:stun1.l.google.com:5349" },
+    //       { urls: "stun:stun2.l.google.com:19302" },
+    //       { urls: "stun:stun2.l.google.com:5349" },
+    //       { urls: "stun:stun3.l.google.com:3478" },
+    //       { urls: "stun:stun3.l.google.com:5349" },
+    //       { urls: "stun:stun4.l.google.com:19302" },
+    //       { urls: "stun:stun4.l.google.com:5349" },
+    //       // {
+    //       //   urls: ["stun:ss-turn2.xirsys.com"],
+    //       // },
+    //       // {
+    //       //   urls: "turn:relay1.expressturn.com:3478",
+    //       //   username: "efG8ZXKOVDKSBH25BV",
+    //       //   credential: "fUVWlxQchGeBwb4J",
+    //       // },
+    //       // {
+    //       //   username:
+    //       //     "d9fPe2Cl9DFs27gi7id9HNck5xmC1pLKGXpp-vypkRfk77tRTDG1a4xGuQw3GUkFAAAAAGgbdWpyZW9sZA==",
+    //       //   credential: "ef4dd680-2b53-11f0-b8c2-0242ac140004",
+    //       //   urls: [
+    //       //     "turn:ss-turn2.xirsys.com:80?transport=udp",
+    //       //     "turn:ss-turn2.xirsys.com:3478?transport=udp",
+    //       //     "turn:ss-turn2.xirsys.com:80?transport=tcp",
+    //       //     "turn:ss-turn2.xirsys.com:3478?transport=tcp",
+    //       //     "turns:ss-turn2.xirsys.com:443?transport=tcp",
+    //       //     "turns:ss-turn2.xirsys.com:5349?transport=tcp",
+    //       //   ],
+    //       // },
+    //     ],
+    //   },
+    // }
+
+    P2PInfo.peer.on("open", (id) => {
+      P2PInfo.user.id = id;
+
+      // set room id for the session
+      if (P2PInfo.initiator) {
+        P2PInfo.room.id = id;
+      } else {
+        if (!invitation) {
+          throw new Error("Invitation is required");
+        }
+        P2PInfo.room.id = invitation?.id;
+      }
+    });
+
+    P2PInfo.peer.on("connection", p2pServices.handleConnection);
+    P2PInfo.initialized = true;
+  },
+
+  close: () => {
+    P2PInfo.connections.forEach((conn) => conn.close());
+    P2PInfo.peer?.destroy();
+    P2PInfo.initialized = false;
+  },
+
+  create: (name: string) => {
+    P2PInfo.room.name = name;
+    P2PInfo.connected = true;
+
+    p2pServices.updateActivity();
+
+    P2PInfo.room.messages = [
+      ...P2PInfo.room.messages,
+      {
+        username: "svara",
+        content: "created session successfully, invite your friends",
+        time: String(Date.now() / 1000),
+      },
+    ];
+  },
+
+  join: () => {
+    const conn = P2PInfo.peer?.connect(P2PInfo.room.id, {
+      metadata: { username: P2PInfo.user.name },
+    });
+    if (!conn) {
+      throw new Error("Connection to Peer failed");
+    }
+
+    console.log("connection open");
+    conn.on("open", () => {
+      console.log("handling ocnnection");
+      p2pServices.handleConnection(conn);
+
+      console.log("Connected to peer", conn.peer);
+      P2PInfo.connected = true;
+      P2PInfo.room.name = "Untitled Session";
+      p2pServices.updateActivity();
+
+      P2PInfo.room.messages = [
+        ...P2PInfo.room.messages,
+        {
+          username: "svara",
+          content: "joined session successfully, invite your friends",
+          time: String(Date.now() / 1000),
+        },
+      ];
+    });
+  },
+
+  chat: {
+    send: (content: string) => {
+      const messageData = {
+        type: "msg",
+        username: P2PInfo.user.name,
+        content,
+        time: String(Date.now() / 1000),
+      };
+
+      // Add own message to chat
+      P2PInfo.room.messages = [...P2PInfo.room.messages, messageData];
+
+      // Broadcast to all peers
+      P2PInfo.connections.forEach((conn) => {
+        conn.send(messageData);
+      });
+    },
+  },
+
+  handleConnection: (conn: DataConnection) => {
+    P2PInfo.connections.add(conn);
+
+    console.log("handling connection", conn.peer);
+
+    // broadcast room name
+    if (P2PInfo.initiator) {
+      console.log("sending room name", P2PInfo.room.name);
+      conn.on("open", () => {
+        conn.send({
+          type: "meta",
+          roomname: P2PInfo.room.name,
+        });
+      });
+    }
+
+    // add client connection message
+    P2PInfo.room.messages = [
+      ...P2PInfo.room.messages,
+      {
+        username: "server",
+        content: `${conn.metadata?.username || "A user"} has connected`,
+        time: String(Date.now() / 1000),
+      },
+    ];
+
+    p2pServices.updateActivity();
+
+    conn.on("data", (data: any) => {
+      if (data.type === "msg") {
+        P2PInfo.room.messages = [
+          ...P2PInfo.room.messages,
+          {
+            username: data.username,
+            content: data.content,
+            time: String(Date.now() / 1000),
+          },
+        ];
+      }
+
+      if (data.type == "meta") {
+        P2PInfo.room.name = data.roomname;
+      }
+    });
+
+    conn.on("close", () => {
+      P2PInfo.connections.delete(conn);
+      P2PInfo.room.messages = [
+        ...P2PInfo.room.messages,
+        {
+          username: "server",
+          content: `${conn.metadata?.username || "A user"} has disconnected`,
+          time: String(Date.now() / 1000),
+        },
+      ];
+      p2pServices.updateActivity();
+    });
+  },
+  updateActivity: () => {
+    P2PInfo.room.activity = `(${P2PInfo.connections.size + 1})`;
   },
 };
 
