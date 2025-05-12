@@ -15,7 +15,7 @@ export default defineConfig({
         theme_color: "#000000",
         background_color: "#ffffff",
 
-        start_url: "/svara#dashboard",
+        start_url: "/svara/#dashboard",
         scope: "/svara/",
         display: "standalone",
         icons: [
