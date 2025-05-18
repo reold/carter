@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && touch dist/.nojekyll",
-    "deploy": "gh-pages -d dist --dotfiles",
+    "build:ghp": "vite build --mode ghp && touch dist/.nojekyll",
+    "build:cfp": "vite build --mode cfp",
+    "deploy": "echo 'Deploying to GH and CF pages' && rm -rf node_modules/.cache/gh-pages && npm run deploy:ghp && npm run deploy:cfp",
+    "deploy:ghp": "gh-pages -d dist --dotfiles -f",
+    "deploy:cfp": "gh-pages -d cfp-dist -b cf-pages -f",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.node.json"
   },
