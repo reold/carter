@@ -123,7 +123,7 @@
           });
         break;
       default:
-        window.location.href = "#dashboard";
+        window.location.href = "#dash";
     }
   };
 </script>
