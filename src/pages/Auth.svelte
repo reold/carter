@@ -129,12 +129,12 @@
 </script>
 
 <div
-  class="w-[100dvw] h-[100dvh] bg-black flex flex-col items-center justify-center"
+  class="w-dvw h-dvh bg-black flex flex-col items-center justify-center"
   style="background-size: 40px 40px;
   background-image: radial-gradient(circle, #FFF 1px, rgba(0, 0, 0, 0) 1px);"
 >
   <div
-    class="w-[90%] max-w-[30rem] bg-white text-black dark:bg-black dark:text-white rounded-md p-2.5 ring-1 ring-black/50 dark:ring-white/50"
+    class="w-[90%] max-w-120 bg-white text-black dark:bg-black dark:text-white rounded-md p-2.5 ring-1 ring-black/50 dark:ring-white/50"
     class:pointer-events-none={staging.loading}
   >
     <div class="flex flex-row items-center justify-end space-x-[2ch] relative">
@@ -152,7 +152,7 @@
         /></svg
       >
     </div>
-    <div class="h-[1px] w-full bg-black/50 dark:bg-white/50 my-[1ch]"></div>
+    <div class="h-px w-full bg-black/50 dark:bg-white/50 my-[1ch]"></div>
     <h1 class="text-3xl font-bold mt-[2ch]">
       {#if staging.phase == "complete"}JioSaavn Link Success!{:else}Link
         JioSaavn{/if}
@@ -183,14 +183,14 @@
           spellcheck="false"
           inputmode="email"
           id="email-input"
-          class="px-2.5 pb-2.5 pt-4 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 invalid:dark:ring-red-500 dark:focus:ring-blue-500 focus:outline-none focus:ring-blue-600 peer appearance-none"
+          class="px-2.5 pb-2.5 pt-4 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 dark:invalid:ring-red-500 dark:focus:ring-blue-500 focus:outline-hidden focus:ring-blue-600 peer appearance-none"
           placeholder=" "
           bind:this={inputs.email.ele}
           bind:value={inputs.email.value}
         />
         <label
           for="email-input"
-          class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-white dark:bg-black peer-focus:px-1.5 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+          class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-white dark:bg-black peer-focus:px-1.5 peer-focus:text-blue-600 dark:peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 peer-focus:rtl:translate-x-1/4 peer-focus:rtl:left-auto start-1"
           >email address</label
         >
       {:else if staging.phase == "password"}
@@ -202,14 +202,14 @@
           aria-describedby="password-info"
           id="password-input"
           minlength="7"
-          class="px-2.5 pb-2.5 pt-4 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 invalid:dark:ring-red-500 dark:focus:ring-blue-500 focus:outline-none focus:ring-blue-600 peer appearance-none"
+          class="px-2.5 pb-2.5 pt-4 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 dark:invalid:ring-red-500 dark:focus:ring-blue-500 focus:outline-hidden focus:ring-blue-600 peer appearance-none"
           placeholder=" "
           bind:this={inputs.password.ele}
           bind:value={inputs.password.value}
         />
         <label
           for="password-input"
-          class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-white dark:bg-black peer-focus:px-1.5 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+          class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-white dark:bg-black peer-focus:px-1.5 peer-focus:text-blue-600 dark:peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 peer-focus:rtl:translate-x-1/4 peer-focus:rtl:left-auto start-1"
         >
           password</label
         >
@@ -222,14 +222,14 @@
           aria-label="one-time password"
           pattern="\d*"
           maxlength="10"
-          class="px-2.5 pb-2.5 pt-4 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 invalid:dark:ring-red-500 dark:focus:ring-blue-500 focus:outline-none focus:ring-blue-600 peer appearance-none"
+          class="px-2.5 pb-2.5 pt-4 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 dark:invalid:ring-red-500 dark:focus:ring-blue-500 focus:outline-hidden focus:ring-blue-600 peer appearance-none"
           placeholder=" "
           bind:this={inputs.otp.ele}
           bind:value={inputs.otp.value}
         />
         <label
           for="otp-input"
-          class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-white dark:bg-black peer-focus:px-1.5 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+          class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-white dark:bg-black peer-focus:px-1.5 peer-focus:text-blue-600 dark:peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 peer-focus:rtl:translate-x-1/4 peer-focus:rtl:left-auto start-1"
         >
           one-time password</label
         >
@@ -284,7 +284,7 @@
       <button
         transition:fade={{ duration: 500 }}
         onclick={() => {
-          window.location.hash = "#dashboard";
+          window.location.hash = "#dash";
         }}
         type="button"
         class="w-full text-sm bg-black/25 dark:bg-white/15 dark:text-white text-black rounded-lg mt-2.5"
