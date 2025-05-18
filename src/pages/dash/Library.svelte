@@ -5,6 +5,7 @@
   import { dataFetch, PROXY_URL } from "../../services.svelte";
   import { usePlayer, type TrackT } from "../../player.svelte";
   import { ViewInfo, TabEnum } from "../../store.svelte";
+  import Track from "../../lib/Track.svelte";
 
   let library = $state({
     jiosaavn: {
@@ -46,7 +47,8 @@
     $ViewInfo.tab;
   });
 
-  const handlePlay = (playlist) => {
+  // FIX: improve types
+  const handlePlay = (playlist: { tracks: TrackT[] }) => {
     playlist.tracks.forEach((track, ti) => {
       if (ti == 0) {
         usePlayer.playback.play(track.meta, track.url);
@@ -172,12 +174,29 @@
             d="M2.625 6.75a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0A.75.75 0 0 1 8.25 6h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75ZM2.625 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0ZM7.5 12a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12A.75.75 0 0 1 7.5 12Zm-4.875 5.25a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875 0a.75.75 0 0 1 .75-.75h12a.75.75 0 0 1 0 1.5h-12a.75.75 0 0 1-.75-.75Z"
             clip-rule="evenodd"
           />
-        </svg> Playlists
+        </svg>Playlists
       </p>
       <div class="overflow-y-scroll max-h-[60dvh]">
         <ul class="flex flex-col">
           {#each library.carter.playlists as playlist}
-            <li class="border-black/50 dark:border-white/50 border-b-[1px]">
+            <Track
+              track={{
+                title: playlist.title,
+                image:
+                  playlist.tracks.length !== 0
+                    ? playlist.tracks[0].meta.img
+                    : undefined,
+                subtitle:
+                  playlist.tracks.length == 0
+                    ? `empty playlist`
+                    : `${playlist.tracks.length} track${playlist.tracks.length > 1 ? "s" : ""}`,
+              }}
+              onPlay={() => {
+                handlePlay(playlist);
+              }}
+              onMoreActions={() => {}}
+            />
+            <!-- <li class="border-black/50 dark:border-white/50 border-b">
               <button
                 class="h-full w-full p-2 flex flex-row items-center space-x-2 text-left"
                 onclick={() => handlePlay(playlist)}
@@ -188,7 +207,7 @@
                   viewBox="0 0 24 24"
                   stroke-width="1.5"
                   stroke="currentColor"
-                  class="size-[1.5rem] stroke-violet-500"
+                  class="size-6 stroke-violet-500"
                 >
                   <path
                     stroke-linecap="round"
