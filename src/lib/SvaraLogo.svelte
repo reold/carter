@@ -3,8 +3,6 @@
 </script>
 
 <svg
-  width="500"
-  height="500"
   viewBox="0 0 500 500"
   fill="none"
   class={className}
