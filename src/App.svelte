@@ -12,7 +12,7 @@
 
   const routing: { [key: string]: { component: any } } = {
     home: { component: () => import("./pages/Home.svelte") },
-    dashboard: {
+    dash: {
       component: () => import("./pages/dash/Dash.svelte"),
     },
     geet: {
@@ -38,7 +38,9 @@
           jamInfo: { create: false, roomId: routeParams.substring(4) },
         };
         $ViewInfo.sheets.jam = true;
-        route = routing.dashboard;
+        route = routing.dash;
+      } else {
+        route = routing.home;
       }
       return;
     }
