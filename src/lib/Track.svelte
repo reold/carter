@@ -1,14 +1,7 @@
 <script lang="ts">
-  import { fade, slide } from "svelte/transition";
-  import { cubicInOut } from "svelte/easing";
+  import { fade } from "svelte/transition";
 
-  const {
-    track,
-    playing = false,
-    onPlay,
-    onAddToQueue,
-    onMoreActions,
-  } = $props();
+  const { track, playing = false, onPlay, onMoreActions } = $props();
 
   let touch = $state({
     held: false,
@@ -18,31 +11,36 @@
   });
 
   const swipeController = {
-    start: (x: number, y: number) => {
+    start: ({ clientX: x, clientY: y }: PointerEvent) => {
       touch.held = true;
       touch.originX = x;
       touch.originY = y;
       focused = true;
-    },
-    move: (x: number, y: number) => {
-      if (touch.held) {
-        const dX = x - touch.originX;
-        const dY = y - touch.originY;
 
-        if (Math.abs(dY) > 50) {
-          touch.held = false;
-          focused = false;
-        } else if (dX < -50) {
-          showActions = true;
-        } else {
-          showActions = false;
-        }
+      window.addEventListener("pointerup", swipeController.end);
+      window.addEventListener("pointermove", swipeController.move);
+    },
+    move: ({ clientX: x, clientY: y }: PointerEvent) => {
+      if (!touch.held) return;
+      const dX = x - touch.originX;
+      const dY = y - touch.originY;
+
+      if (Math.abs(dY) > 50) {
+        touch.held = false;
+        focused = false;
+      } else if (dX < -50) {
+        showActions = true;
+      } else {
+        showActions = false;
       }
     },
     end: () => {
       touch.held = false;
       touch.completed = true;
       focused = false;
+
+      window.removeEventListener("pointermove", swipeController.move);
+      window.removeEventListener("pointerup", swipeController.end);
     },
   };
   let focused = $state(false);
@@ -52,23 +50,16 @@
 
 <div
   transition:fade={{ duration: 500 }}
-  class="w-full h-[10dvh] pl-2 min-h-[7dvh] ring-zinc-500 text-black dark:text-white overflow-hidden flex flex-row space-x-2 border-b-[1px] border-black/5 dark:border-white/5 py-2 select-none transition-colors duration-100 {focused
+  class="w-full h-[10dvh] pl-1.5 min-h-[7dvh] ring-zinc-500 text-black dark:text-white overflow-hidden flex flex-row space-x-3 border-b-2 border-black/5 dark:border-white/5 py-2 select-none transition-colors duration-100 {focused
     ? 'bg-black/5 dark:bg-white/5'
     : 'bg-transparent'}"
-  onpointerdown={(e) => {
-    swipeController.start(e.clientX, e.clientY);
-  }}
-  onpointermove={(e) => {
-    swipeController.move(e.clientX, e.clientY);
-  }}
-  onpointerup={(e) => {
-    swipeController.end();
-  }}
+  onpointerdown={swipeController.start}
+  onpointerup={swipeController.end}
   role="button"
   tabindex="0"
 >
   <button
-    class="p-0 m-0 max-w-[20%] my-auto transition-transform duration-200 rounded-[0.5em] overflow-hidden {focused
+    class="p-0 m-0 max-w-[10%] my-auto transition-transform duration-200 rounded-[0.5em] overflow-hidden {focused
       ? 'scale-105'
       : ''}"
     onclick={(e) => {
@@ -78,12 +69,12 @@
     }}
   >
     {#if track.image}
-    <img
-      src={track.image}
-      alt="cover art"
-      class="max-h-[7dvh]"
-      loading="lazy"
-    />
+      <img
+        src={track.image}
+        alt="cover art"
+        class="max-h-[7dvh]"
+        loading="lazy"
+      />
     {:else}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -130,12 +121,8 @@
       {@html track.subtitle}</span
     >
   </button>
-  {#if showActions}
-    <div
-      class="flex items-center text-black dark:text-white min-h-[7dvh] w-[40%] space-x-2"
-      transition:slide={{ axis: "x", duration: 100, easing: cubicInOut }}
-    >
-      <button
+
+  <!-- <button
         class="bg-black/5 dark:bg-white/5 text-black dark:text-white rounded-full"
         aria-label="add track to queue"
         onclick={onAddToQueue}
@@ -151,32 +138,23 @@
             clip-rule="evenodd"
           />
         </svg>
-      </button>
-      <button
-        class="bg-black/5 dark:bg-white/5 text-black dark:text-white rounded-full"
-        aria-label="visit source link"
-        onclick={onMoreActions}
-        ><svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-          class="size-[1.2em]"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-          />
-
-          <!-- <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
-          /> -->
-        </svg>
-      </button>
-    </div>
-  {/if}
+      </button> -->
+  <button
+    class="p-0 text-black dark:text-white rounded-full aspect-square flex flex-col items-center justify-center"
+    aria-label="visit source link"
+    onclick={onMoreActions}
+    ><svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      class="size-[1.2em] dark:stroke-white/50 stroke-black/50"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+      />
+    </svg>
+  </button>
 </div>
