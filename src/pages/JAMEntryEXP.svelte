@@ -283,7 +283,8 @@
             id="username"
             bind:value={form.username}
             placeholder="Username"
-            class="bg-transparent ring-0 focus:outline-none w-full py-1 pr-2"
+            class="bg-transparent ring-0 focus:outline-hidden w-full py-1 pr-2"
+            autocomplete="username"
           />
         </div>
         {#if info.create}
@@ -293,7 +294,8 @@
             id="room title"
             bind:value={form.sessionName}
             placeholder="Session Name, e.g., Varun's Party Music"
-            class="bg-white/5 ring-0 focus:outline-none rounded-md py-1 px-2 text-white"
+            class="bg-white/5 ring-0 focus:outline-hidden rounded-md py-1 px-2 text-white"
+            autocomplete="off"
           />
         {/if}
         <p
@@ -332,15 +334,15 @@
       </div>
     {:else}
       <div
-        class="w-[100dvw] h-[80dvh] max-h-[70dvh] overflow-y-scroll overflow-x-hidden text-white ring-1 ring-white/5 mb-2"
+        class="w-dvw h-[80dvh] max-h-[70dvh] overflow-y-scroll overflow-x-hidden text-white ring-1 ring-white/5 mb-2"
         bind:this={msgsDiv}
       >
         <div
-          class="sticky top-0 flex flex-row justify-end border-b-[0px] w-[100dvw] h-[5dvh]"
+          class="sticky top-0 flex flex-row justify-end border-b-0 w-dvw h-[5dvh]"
         >
           <button
             aria-label="copy session invite link"
-            class="w-[15%] flex flex-col items-center justify-center rounded-bl-md overflow-hidden p-0 m-0 max-h-[3em] select-none bg-gradient-to-b from-black/10 dark:from-white/10 to-black/5 dark:to-white/5 backdrop-blur-3xl"
+            class="w-[15%] flex flex-col items-center justify-center rounded-bl-md overflow-hidden p-0 m-0 max-h-[3em] select-none bg-linear-to-b from-black/10 dark:from-white/10 to-black/5 dark:to-white/5 backdrop-blur-3xl"
             onclick={() => handleShare()}
           >
             <svg
@@ -412,8 +414,9 @@
           name="message"
           id="message"
           placeholder="send a message"
+          autocomplete="off"
           bind:value={messageContent}
-          class="bg-transparent ring-0 focus:outline-none w-full py-1 pl-2"
+          class="bg-transparent ring-0 focus:outline-hidden w-full py-1 pl-2"
           onkeyup={(e: KeyboardEvent) => {
             if (e.key == "Enter") {
               handleSendMessage();

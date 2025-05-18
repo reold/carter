@@ -91,24 +91,24 @@
     Select playlist
   </p>
   <div class="flex flex-row items-center justify-around space-x-2">
-    <div class="w-full max-w-[30rem] relative">
+    <div class="w-full max-w-120 relative">
       <input
         type="text"
         autocomplete="off"
         spellcheck="false"
         id="playlist-name-input"
-        class="p-0.5 px-2 pt-3 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 invalid:dark:ring-red-500 dark:focus:ring-blue-500 focus:outline-none focus:ring-blue-600 peer appearance-none"
+        class="p-0.5 px-2 pt-3 w-full text-[16px] text-black dark:text-white bg-transparent rounded-lg ring-1 ring-black/50 dark:ring-white/50 invalid:ring-red-600 dark:invalid:ring-red-500 dark:focus:ring-blue-500 focus:outline-hidden focus:ring-blue-600 peer appearance-none"
         placeholder=" "
         bind:value={searchText}
       />
       <label
         for="playlist-name-input"
-        class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-gray-200 dark:bg-zinc-900 peer-focus:px-1.5 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+        class="absolute text-sm text-black/75 dark:text-white/75 duration-300 transform -translate-y-4 scale-[85%] px-1.5 top-2 z-10 origin-[0] bg-gray-200 dark:bg-zinc-900 peer-focus:px-1.5 peer-focus:text-blue-600 dark:peer-focus:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-[85%] peer-focus:-translate-y-4 peer-focus:rtl:translate-x-1/4 peer-focus:rtl:left-auto start-1"
         >playlist name</label
       >
     </div>
     <button
-      class="bg-blue-500 dark:bg-blue-400 text-white dark:text-black rounded-md disabled:bg-black/50 disabled:dark:bg-white/50"
+      class="bg-blue-500 dark:bg-blue-400 text-white dark:text-black rounded-md disabled:bg-black/50 dark:disabled:bg-white/50"
       disabled={!canCreatePlaylist}
       onclick={handleCreatePlaylist}>create</button
     >
@@ -128,7 +128,7 @@
                 id="ripple-on"
                 type="checkbox"
                 bind:checked={playlist.selected}
-                class="peer relative h-[1.25em] aspect-square cursor-pointer appearance-none rounded border border-gray-300 shadow transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-white/50 before:opacity-0 before:transition-opacity checked:border-black/20 dark:checked:bg-violet-600 checked:bg-violet-500 checked:before:bg-transparent hover:before:opacity-5"
+                class="peer relative h-[1.25em] aspect-square cursor-pointer appearance-none rounded-sm border border-gray-300 shadow-sm transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-white/50 before:opacity-0 before:transition-opacity checked:border-black/20 dark:checked:bg-violet-600 checked:bg-violet-500 checked:before:bg-transparent hover:before:opacity-5"
               />
               <span
                 class="pointer-events-none absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4 text-white opacity-0 transition-opacity peer-checked:opacity-100"

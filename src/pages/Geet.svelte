@@ -177,7 +177,7 @@
       {/each}
     </ol>
     <div
-      class="absolute bg-gradient-to-b from-black/0 to-black/100 w-full h-[10dvh] bottom-0 left-0"
+      class="absolute bg-linear-to-b from-black/0 to-black w-full h-[10dvh] bottom-0 left-0"
     ></div>
   </div>
 </div>

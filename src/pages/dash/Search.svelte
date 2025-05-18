@@ -202,7 +202,7 @@
 >
   {#if searchRes.songs}
     <h2
-      class="text-black dark:text-white font-medium w-[100dvw] text-[9px] font-mono mt-2 px-2 select-none"
+      class="text-black dark:text-white font-medium w-dvw text-[9px] font-mono mt-2 px-2 select-none"
     >
       {#if searchRes.loading}
         <span class="animate-pulse">Loading(proxy -> server). </span>
@@ -218,7 +218,7 @@
         {/if}
       {/if}
       <span
-        class="text-[8px] text-black/80 dark:text-white/80 bg-black/5 dark:bg-white/5 p-0.5 rounded-sm"
+        class="text-[8px] text-black/80 dark:text-white/80 bg-black/5 dark:bg-white/5 p-0.5 rounded-xs"
         >Powered by JioSaavn</span
       >
     </h2>
@@ -274,7 +274,7 @@
   {:else}
     <div class="px-2">
       <h1
-        class="text-black dark:text-white font-semibold text-center mt-[1em] mb-2 text-xl border-b-[1px] border-black/10 dark:border-white/10"
+        class="text-black dark:text-white font-semibold text-center mt-[1em] mb-2 text-xl border-b border-black/10 dark:border-white/10"
       >
         🎶 Search for Music!
       </h1>

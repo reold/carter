@@ -114,9 +114,7 @@
   <meta property="theme-color" content="#000" />
   <title>{stringHelpers.capitalize($ViewInfo.tab)} - Svara</title>
 </svelte:head>
-<div
-  class="w-[100dwv] h-[100dvh] bg-white dark:bg-black text-black dark:text-white"
->
+<div class="w-[100dwv] h-dvh bg-white dark:bg-black text-black dark:text-white">
   <!-- {#await tab.views[$ViewInfo.tab].component()} -->
   {#each Object.keys(tab.views) as viewItem}
     {#if tab.views[viewItem].component}
@@ -127,7 +125,7 @@
 
   {#if tab.loading}
     <div
-      class="backdrop-blur-lg backdrop-brightness-[40%] absolute top-0 left-0 h-full w-full flex flex-col items-center justify-center"
+      class="backdrop-blur-lg backdrop-brightness-40 absolute top-0 left-0 h-full w-full flex flex-col items-center justify-center"
       transition:fade={{ duration: 150, delay: 100 }}
     >
       <h1 class="text-2xl font-medium text-center mt-8">
@@ -159,15 +157,15 @@
   {/await} -->
   <!-- bottom transition gradient -->
   <div
-    class="absolute h-[15dvh] bottom-[0dvh] w-screen bg-gradient-to-b from-white/0 dark:from-black/0 to-[40%] to-white dark:to-black"
+    class="absolute h-[15dvh] -bottom-[0dvh] w-screen bg-linear-to-b from-white/0 dark:from-black/0 to-40% to-white dark:to-black"
   ></div>
   <div
     transition:fly={{ duration: 250, y: 100 }}
-    class="absolute max-h-[19dvh] space-y-[1dvh] w-screen bottom-[0dvh] flex flex-col items-center"
+    class="absolute max-h-[19dvh] space-y-[1dvh] w-screen -bottom-[0dvh] flex flex-col items-center"
   >
     {#if usePlayer.info.init}
       <div
-        class="h-[8dvh] w-[95dvw] ring-1 ring-black/10 dark:ring-white/10 bg-black/5 dark:bg-white/5 rounded-md backdrop-brightness-[80%] dark:backdrop-brightness-[20%] backdrop-blur-lg flex flex-row items-center px-[0.5dvh] pt-[0.5dvh] border-t-[1px] border-white/5 dark:border-white/5 overflow-hidden"
+        class="h-[8dvh] w-[95dvw] ring-1 ring-black/10 dark:ring-white/10 bg-black/5 dark:bg-white/5 rounded-md backdrop-brightness-80 dark:backdrop-brightness-20 backdrop-blur-lg flex flex-row items-center px-[0.5dvh] pt-[0.5dvh] border-t border-white/5 dark:border-white/5 overflow-hidden"
       >
         <div
           class="h-[2px] inset-0 w-full bg-black/5 dark:bg-white/5 absolute top-0 rounded-full overflow-hidden"
@@ -294,7 +292,7 @@
       </div>
     {/if}
     <div
-      class="h-[10dvh] text-xs w-[100dvw] bg-black/5 dark:bg-white/5 rounded-t-md backdrop-brightness-[80%] dark:backdrop-brightness-[20%] backdrop-blur-lg flex flex-row items-start justify-center overflow-hidden"
+      class="h-[10dvh] text-xs w-dvw bg-black/5 dark:bg-white/5 rounded-t-md backdrop-brightness-80 dark:backdrop-brightness-20 backdrop-blur-lg flex flex-row items-start justify-center overflow-hidden"
       transition:fly={{ duration: 500, y: 100 }}
     >
       <!-- <div
@@ -312,7 +310,7 @@
           ><svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
-            class="size-[1.75rem] {$ViewInfo.tab == item
+            class="size-7 {$ViewInfo.tab == item
               ? 'fill-current'
               : `stroke-current stroke-[1.5px] fill-none`}"
           >
@@ -329,7 +327,7 @@
     <div
       in:fly={{ duration: 500, y: 750 }}
       out:fly={{ duration: 500, y: 750 }}
-      class="absolute top-0 left-0 w-[100dvw] h-[100dvh] bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md overflow-y-scroll no-scrollbar"
+      class="absolute top-0 left-0 w-dvw h-dvh bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md overflow-y-scroll no-scrollbar"
     >
       <div class="w-full flex flex-col items-center relative">
         <div
@@ -343,7 +341,7 @@
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              class="size-[1.75rem] dark:fill-white/50 fill-black/50"
+              class="size-7 dark:fill-white/50 fill-black/50"
             >
               <path
                 fill-rule="evenodd"
@@ -353,7 +351,7 @@
             </svg>
           </button><button
             onclick={() => {
-              $ViewInfo.sheets.moreActions = true;
+              $ViewInfo.sheets.actions = true;
             }}
             aria-label="close sheet"
             class="p-0 m-0"
@@ -361,7 +359,7 @@
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              class="size-[1.75rem] dark:fill-white/50 fill-black/50"
+              class="size-7 dark:fill-white/50 fill-black/50"
             >
               <path
                 fill-rule="evenodd"
@@ -384,7 +382,7 @@
             style="view-transition-name: player-thumbnail;"
             src={usePlayer.info.meta.img}
             alt="song thumbnail"
-            class="w-full h-full object-contain rounded-md shadow-white dark:shadow-black shadow-sm"
+            class="w-full h-full object-contain rounded-md shadow-white dark:shadow-black shadow-xs"
           />
         </div>
         <div class="-space-y-1 mt-4 px-[2.5dvw] flex flex-col items-center">
@@ -459,7 +457,7 @@
         <div class="flex flex-row items-center justify-evenly w-[95dvw] mt-4">
           <!-- shuffle -->
           <button
-            class="p-0 m-0 w-[1.5rem] {usePlayer.info.controls.shuffle
+            class="p-0 m-0 w-6 {usePlayer.info.controls.shuffle
               ? 'text-violet-500 dark:text-violet-600'
               : ''}"
             aria-label="next song"
@@ -486,7 +484,7 @@
 
           <!-- previous -->
           <button
-            class="p-0 m-0 w-[2rem] disabled:text-black/25 dark:disabled:text-white/25"
+            class="p-0 m-0 w-8 disabled:text-black/25 dark:disabled:text-white/25"
             aria-label="previous song"
             disabled={usePlayer.info.qi < 1}
             onclick={() => {
@@ -509,7 +507,7 @@
           </button>
           <!-- pause/play -->
           <button
-            class="p-0 m-0 w-[3rem]"
+            class="p-0 m-0 w-12"
             onclick={() => {
               if (usePlayer.info.playing) usePlayer.playback.pause();
               else usePlayer.playback.resume();
@@ -540,7 +538,7 @@
           >
           <!-- next -->
           <button
-            class="p-0 m-0 w-[2rem] disabled:text-black/25 dark:disabled:text-white/25"
+            class="p-0 m-0 w-8 disabled:text-black/25 dark:disabled:text-white/25"
             aria-label="next song"
             disabled={usePlayer.info.queue.length - 1 <= usePlayer.info.qi}
             onclick={() => {
@@ -562,7 +560,7 @@
           </button>
           <!-- loop -->
           <button
-            class="p-0 m-0 w-[1.5rem] {usePlayer.info.controls.loop
+            class="p-0 m-0 w-6 {usePlayer.info.controls.loop
               ? 'text-violet-500 dark:text-violet-600'
               : ''}"
             aria-label="next song"
@@ -596,7 +594,7 @@
           >
             <h3 class="text-xl">
               Lyrics <span
-                class="text-[8px] text-black/80 dark:text-white/80 bg-black/5 dark:bg-white/5 p-0.5 rounded-sm"
+                class="text-[8px] text-black/80 dark:text-white/80 bg-black/5 dark:bg-white/5 p-0.5 rounded-xs"
                 >Powered by LRCLIB</span
               >
             </h3>
@@ -663,7 +661,7 @@
           >
             <h3 class="text-xl">
               Lyrics <span
-                class="text-[8px] text-black/80 dark:text-white/80 bg-black/5 dark:bg-white/5 p-0.5 rounded-sm"
+                class="text-[8px] text-black/80 dark:text-white/80 bg-black/5 dark:bg-white/5 p-0.5 rounded-xs"
                 >Powered by LRCLIB</span
               >
             </h3>
@@ -700,7 +698,7 @@
     <div
       in:fade={{ duration: 250 }}
       out:fade={{ duration: 250, delay: 100 }}
-      class="absolute top-0 h-[100dvh] w-[100dvw] backdrop-brightness-[15%] bg-transparent"
+      class="absolute top-0 h-dvh w-dvw backdrop-brightness-15 bg-transparent"
     >
       {#if $ViewInfo.sheets.selectPlaylist}
         <SelectPlaylist />

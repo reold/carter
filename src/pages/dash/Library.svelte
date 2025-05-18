@@ -70,7 +70,7 @@
         class="flex flex-row items-center w-full overflow-x-scroll overflow-y-hidden p-[2ch] space-x-2 py-1 no-scrollbar actions-list"
       >
         <button
-          class="bg-gradient-to-br from-fuchsia-500 to-rose-500 rounded-md font-bold whitespace-nowrap text-white text-sm"
+          class="bg-linear-to-br from-fuchsia-500 to-rose-500 rounded-md font-bold whitespace-nowrap text-white text-sm"
           onclick={() => {
             $ViewInfo.sheets.jam = true;
           }}
@@ -90,7 +90,7 @@
           JAM
         </button>
         <button
-          class="bg-gradient-to-b from-blue-400 to-blue-800 rounded-md font-bold text-white text-sm whitespace-nowrap"
+          class="bg-linear-to-b from-blue-400 to-blue-800 rounded-md font-bold text-white text-sm whitespace-nowrap"
           onclick={() => {
             window.location.hash = "#auth";
           }}
@@ -110,7 +110,7 @@
           JioSaavn
         </button>
         <button
-          class="bg-gradient-to-b from-blue-400 to-blue-800 rounded-md font-bold whitespace-nowrap text-white text-sm"
+          class="bg-linear-to-b from-blue-400 to-blue-800 rounded-md font-bold whitespace-nowrap text-white text-sm"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -126,11 +126,11 @@
           </svg>
           Spotify
         </button><button
-          class="bg-gradient-to-b from-gray-600 to-gray-900 rounded-md font-bold whitespace-nowrap text-white text-sm"
+          class="bg-linear-to-b from-gray-600 to-gray-900 rounded-md font-bold whitespace-nowrap text-white text-sm"
         >
           link DUMMY
         </button><button
-          class="bg-gradient-to-b from-gray-600 to-gray-900 rounded-md font-bold whitespace-nowrap text-white text-sm"
+          class="bg-linear-to-b from-gray-600 to-gray-900 rounded-md font-bold whitespace-nowrap text-white text-sm"
         >
           Settings
         </button>
@@ -138,12 +138,12 @@
 
       <!-- Left gradient -->
       <div
-        class="pointer-events-none absolute top-0 left-0 h-full w-[4ch] bg-gradient-to-r dark:from-black/50 to-transparent"
+        class="pointer-events-none absolute top-0 left-0 h-full w-[4ch] bg-linear-to-r dark:from-black/50 to-transparent"
       ></div>
 
       <!-- Right gradient -->
       <div
-        class="pointer-events-none absolute top-0 right-0 h-full w-[4ch] bg-gradient-to-l dark:from-black/100 to-transparent"
+        class="pointer-events-none absolute top-0 right-0 h-full w-[4ch] bg-linear-to-l dark:from-black to-transparent"
       ></div>
     </div>
 
@@ -159,13 +159,13 @@
         </div>
       </div>
     {/if} -->
-    <div class="w-full bg-black/5 dark:bg-white/5 pt-2">
+    <div class="w-full pt-2">
       <p class="text-lg font-medium px-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          class="size-[1.25em] inline"
+          class="size-[1.25em] inline mr-1"
         >
           <path
             fill-rule="evenodd"
@@ -213,7 +213,7 @@
                   </p>
                 </div>
               </button>
-            </li>
+            </li> -->
           {/each}
         </ul>
       </div>

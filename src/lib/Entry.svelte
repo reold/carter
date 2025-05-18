@@ -32,7 +32,7 @@
       <input
         type="text"
         placeholder="JioSaavn Profile URL"
-        class="bg-black/10 dark:bg-white/10 ring-0 focus:outline-none rounded-md py-1 px-2 text-black dark:text-white"
+        class="bg-black/10 dark:bg-white/10 ring-0 focus:outline-hidden rounded-md py-1 px-2 text-black dark:text-white"
       />
     </div>
     <button

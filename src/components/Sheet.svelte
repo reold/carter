@@ -70,11 +70,11 @@
 
 {#if visible}
   <div
-    class="w-screen h-[100vh] absolute top-0 overflow-y-hidden"
+    class="w-screen h-screen absolute top-0 overflow-y-hidden"
     id="collapse-sheet"
   >
     <div
-      class="w-full h-full backdrop-brightness-[40%] relative top-0"
+      class="w-full h-full backdrop-brightness-40 relative top-0"
       in:fade={{ duration: 300 }}
       out:fade={{ duration: 500 }}
     ></div>
@@ -95,7 +95,7 @@
         ></div>
       </div>
       <div
-        class="w-full flex flex-row justify-center h-[7.5%] mt-[5%] relative border-b-[1px] border-black/25 dark:border-white/25 text-2xl font-black"
+        class="w-full flex flex-row justify-center h-[7.5%] mt-[5%] relative border-b border-black/25 dark:border-white/25 text-2xl font-black"
       >
         {@render title()}
         <button
