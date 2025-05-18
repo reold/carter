@@ -60,7 +60,9 @@
 
     // Check if a cached response exists and is still valid
     if (localStorage.getItem(key)) {
-      const cached = JSON.parse(localStorage.getItem(key));
+      if (!localStorage.getItem(key)) return;
+
+      const cached = JSON.parse(localStorage.getItem(key) as string);
       if (cached) {
         if (now < cached.expiry) {
           return cached.data;
@@ -146,7 +148,7 @@
     <input
       bind:value={inputValue}
       type="text"
-      class="bg-transparent ring-0 focus:outline-none rounded-md py-0 h-full placeholder:text-black/50 dark:placeholder:text-white/50 {showClearText
+      class="bg-transparent ring-0 focus:outline-hidden rounded-md py-0 h-full placeholder:text-black/50 dark:placeholder:text-white/50 {showClearText
         ? 'w-[90%]'
         : 'w-[95%]'}"
       placeholder="find songs & playlists"
@@ -246,27 +248,8 @@
             highestQURL
           );
         }}
-        onAddToQueue={async () => {
-          const mediaURLs = await JioSaavnSource.getDownloadableURLs(track);
-
-          if (mediaURLs.length == 0) {
-            console.error("no media url found for track");
-            return;
-          }
-          const highestQURL = mediaURLs.at(-1)?.url;
-          usePlayer.playback.appendQueue(
-            {
-              id: track.id,
-              title: track.title,
-              img: track.image.replace("http://", "https://"),
-              artist: track.more_info.artistMap.primary_artists[0].name || "",
-              album: track.more_info.album || "",
-            },
-            highestQURL
-          );
-        }}
         onMoreActions={() => {
-          $ViewInfo.sheets.moreActions = true;
+          $ViewInfo.sheets.actions = true;
           $ViewInfo.select.track = track;
         }}
       />

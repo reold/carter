@@ -1,17 +1,44 @@
 <script lang="ts">
-  import { blur, fly } from "svelte/transition";
   import { ViewInfo } from "../../store.svelte";
+  import { JioSaavnSource } from "../../source.svelte";
+  import { usePlayer } from "../../player.svelte";
+
+  const handleAddToQueue = async () => {
+    const mediaURLs = await JioSaavnSource.getDownloadableURLs(
+      $ViewInfo.select.track
+    );
+
+    if (mediaURLs.length == 0) {
+      console.error("no media url found for track");
+      return;
+    }
+    const highestQURL = mediaURLs.at(-1)?.url;
+    usePlayer.playback.appendQueue(
+      {
+        id: $ViewInfo.select.track.id,
+        title: $ViewInfo.select.track.title,
+        img: $ViewInfo.select.track.image.replace("http://", "https://"),
+        artist:
+          $ViewInfo.select.track.more_info.artistMap.primary_artists[0].name ||
+          "",
+        album: $ViewInfo.select.track.more_info.album || "",
+      },
+      highestQURL
+    );
+
+    $ViewInfo.sheets.actions = false;
+  };
 </script>
 
 <button
   aria-label="close sheet"
   class="w-screen h-[70dvh] bottom-[30dvh]"
   onclick={(e) => {
-    if (e.target == e?.currentTarget) $ViewInfo.sheets.moreActions = false;
+    if (e.target == e?.currentTarget) $ViewInfo.sheets.actions = false;
   }}
 ></button>
 <div
-  class="absolute bottom-[0px] left-1/2 -translate-x-1/2 h-[30dvh] w-[95dvw] bg-gray-200 dark:bg-zinc-900 rounded-t-lg text-md"
+  class="absolute -bottom-[0px] left-1/2 -translate-x-1/2 h-[30dvh] w-[95dvw] bg-gray-200 dark:bg-zinc-900 rounded-t-lg text-md"
 >
   <p
     class="w-full text-center text-lg font-medium text-black dark:text-white py-1 border-b-1 border-black/20 dark:border-white/20"
@@ -22,7 +49,7 @@
     class="bottom-[calc(30dvh-1.725rem)] p-0 absolute right-[1ch]"
     aria-label="close sheet"
     onclick={(e) => {
-      $ViewInfo.sheets.moreActions = false;
+      $ViewInfo.sheets.actions = false;
     }}
   >
     <svg
@@ -38,6 +65,23 @@
     </svg>
   </button>
   <ul class="more-actions-sheet-ul text-black dark:text-white">
+    <li class="">
+      <button class="w-full text-left" onclick={() => handleAddToQueue()}
+        ><svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-[1.2em] inline mr-2 ml-4"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Add to queue</button
+      >
+    </li>
     <li class="">
       <button
         class="w-full text-left"
@@ -57,6 +101,7 @@
         Add to playlist</button
       >
     </li>
+
     <li class="">
       <button class="w-full text-left"
         ><svg
@@ -102,6 +147,6 @@
 
 <style>
   .more-actions-sheet-ul > li {
-    @apply border-b-[1px] border-black/20 dark:border-white/20;
+    @apply border-b-2 border-black/20 dark:border-white/20;
   }
 </style>

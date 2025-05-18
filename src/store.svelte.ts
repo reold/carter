@@ -12,7 +12,7 @@ export enum TabEnum {
 
 interface ViewT {
   sheets: {
-    moreActions: boolean;
+    actions: boolean;
     selectPlaylist: boolean;
     track: boolean;
     jam: boolean;
@@ -25,7 +25,7 @@ interface ViewT {
 
 export const ViewInfo = writable<ViewT>({
   sheets: {
-    moreActions: false,
+    actions: false,
     selectPlaylist: false,
     track: false,
     jam: false,

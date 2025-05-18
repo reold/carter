@@ -47,10 +47,10 @@
     );
     useLibrary.playlist.create(searchText, "", [asTrackT]);
     $ViewInfo.sheets.selectPlaylist = false;
-    $ViewInfo.sheets.moreActions = false;
+    $ViewInfo.sheets.actions = false;
   };
 
-  const handleClose = (e) => {
+  const handleClose = () => {
     filteredPlaylists.forEach(async (playlist) => {
       const inPlaylist = playlist.tracks.find((track) => {
         return track.meta.id == $ViewInfo.select.track.id;
@@ -75,7 +75,7 @@
     });
 
     $ViewInfo.sheets.selectPlaylist = false;
-    $ViewInfo.sheets.moreActions = false;
+    $ViewInfo.sheets.actions = false;
   };
 </script>
 

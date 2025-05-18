@@ -5,7 +5,7 @@
   import { onMount } from "svelte";
   import { usePlayer } from "../../player.svelte";
   import SelectPlaylist from "./SelectPlaylist.svelte";
-  import MoreActions from "./MoreActions.svelte";
+  import TrackActions from "./TrackActions.svelte";
 
   import { ViewInfo, TabEnum } from "../../store.svelte";
   import { stringHelpers } from "../../utils.svelte";
@@ -101,7 +101,7 @@
     const now = Date.now();
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith("cache-search-")) {
-        const value = JSON.parse(localStorage.getItem(key));
+        const value = JSON.parse(localStorage.getItem(key) as string);
         if (value.expiry < now) {
           localStorage.removeItem(key);
         }
@@ -694,7 +694,7 @@
       </div>
     {/snippet}
   </Sheet> -->
-  {#if $ViewInfo.sheets.moreActions || $ViewInfo.sheets.selectPlaylist}
+  {#if $ViewInfo.sheets.actions || $ViewInfo.sheets.selectPlaylist}
     <div
       in:fade={{ duration: 250 }}
       out:fade={{ duration: 250, delay: 100 }}
@@ -702,8 +702,8 @@
     >
       {#if $ViewInfo.sheets.selectPlaylist}
         <SelectPlaylist />
-      {:else if $ViewInfo.sheets.moreActions}
-        <MoreActions />
+      {:else if $ViewInfo.sheets.actions}
+        <TrackActions />
       {/if}
     </div>
   {/if}
