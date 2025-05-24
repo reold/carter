@@ -8,6 +8,10 @@
 
   onMount(() => {
     useStorage.init();
+    setHashRouting();
+
+    window.addEventListener("hashchange", setHashRouting);
+    // window.addEventListener("popstate", (ev) => console.info(ev));
   });
 
   const routing: { [key: string]: { component: any } } = {
@@ -46,16 +50,15 @@
     }
     route = routing[routeParams];
   };
-
-  $effect(setHashRouting);
-  window.addEventListener("hashchange", setHashRouting);
 </script>
 
 {#await route.component()}
   <div
-    class="h-[100dvh] flex flex-col items-center justify-center px-[2.5dvw] text-black dark:text-white bg-white dark:bg-black"
-    transition:fade={{ duration: 150, delay: 100 }}
+    class="-z-0 h-[100dvh] w-[100dvw] absolute top-0 left-0 flex flex-col items-center justify-center px-[2.5dvw] text-black dark:text-white bg-white/50 dark:bg-black/50 backdrop-blur-sm backdrop-brightness-50"
+    in:fade={{ duration: 100, delay: 100 }}
+    out:fade={{ duration: 100, delay: 0 }}
   >
+    <!-- 500 ms -->
     <SvaraLogo class="h-[30dvh] w-[30dvh] animate-pulse" />
     <h1 class="text-2xl font-medium text-center mt-8">
       <svg
