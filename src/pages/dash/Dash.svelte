@@ -9,6 +9,7 @@
 
   import { ViewInfo, TabEnum } from "../../store.svelte";
   import { stringHelpers } from "../../utils.svelte";
+  import Lyrics from "./Lyrics.svelte";
 
   let { jamInfo = { create: true } } = $props();
 
@@ -589,40 +590,13 @@
       </div> -->
 
         {#if usePlayer.info.meta.lyrics}
-          <div
-            class="bg-black/5 dark:bg-white/5 w-[95dvw] h-fit p-2 rounded-t-md overflow-hidden mt-5"
-          >
-            <h3 class="text-xl">
-              Lyrics <span
-                class="text-[8px] text-black/80 dark:text-white/80 bg-black/5 dark:bg-white/5 p-0.5 rounded-xs"
-                >Powered by LRCLIB</span
-              >
-            </h3>
-            <ul class="max-h-full px-2 text-md space-y-2">
-              {#each usePlayer.info.meta.lyrics.content as block}
-                <li
-                  class={usePlayer.info.t >= block.time
-                    ? ""
-                    : "text-black/80 dark:text-white/50"}
-                >
-                  <button
-                    class="m-0 p-0 text-left text-current"
-                    onclick={() => {
-                      usePlayer.info.audioElm.currentTime = block.time;
-                    }}>{block.text}</button
-                  >
-                </li>
-              {:else}
-                <li class="dark:text-white/50 text-black/80">
-                  Currently not available. You can contribute lyrics through <a
-                    class="dark:text-blue-400 text-blue-600 after:content-['_↗']"
-                    href="https://lrclib.net/"
-                    target="_blank">LRCLIB</a
-                  >
-                </li>
-              {/each}
-            </ul>
-          </div>
+          <Lyrics
+            content={usePlayer.info.meta.lyrics.content}
+            bind:time={usePlayer.info.t}
+            handleSeek={(time: number) => {
+              usePlayer.info.audioElm.currentTime = time;
+            }}
+          />
         {/if}
       </div>
     </div>
